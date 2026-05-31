@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="src/Knights.Domain/Knights.Domain.csproj" />
+  <Project Path="src/Knights.Application/Knights.Application.csproj" />
+  <Project Path="src/Knights.Infrastructure/Knights.Infrastructure.csproj" />
+  <Project Path="src/Knights.Api/Knights.Api.csproj" />
+  <Project Path="tests/Knights.Domain.Tests/Knights.Domain.Tests.csproj" />
+  <Project Path="tests/Knights.Application.Tests/Knights.Application.Tests.csproj" />
+</Solution>

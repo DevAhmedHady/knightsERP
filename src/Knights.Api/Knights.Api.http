@@ -1,0 +1,50 @@
+@Knights.Api_HostAddress = http://localhost:5132
+
+GET {{Knights.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+# @name createUser
+POST {{Knights.Api_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "firstName": "Ahmed",
+  "midName": "Hady",
+  "lastName": "Ali",
+  "userName": "ahmed",
+  "email": "ahmed@example.com",
+  "isEmailConfirmed": false
+}
+
+###
+
+GET {{Knights.Api_HostAddress}}/api/users/{{createUser.response.body.$.id}}
+Accept: application/json
+
+###
+
+PUT {{Knights.Api_HostAddress}}/api/users/{{createUser.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "firstName": "Ahmed",
+  "midName": "Hady",
+  "lastName": "Ali",
+  "userName": "ahmed.hady",
+  "email": "ahmed.hady@example.com",
+  "isEmailConfirmed": true
+}
+
+###
+
+POST {{Knights.Api_HostAddress}}/api/users/{{createUser.response.body.$.id}}/roles/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+###
+
+POST {{Knights.Api_HostAddress}}/api/users/{{createUser.response.body.$.id}}/permissions/22222222-2222-2222-2222-222222222222
+Accept: application/json
+
+###

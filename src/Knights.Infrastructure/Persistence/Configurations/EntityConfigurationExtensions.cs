@@ -1,0 +1,22 @@
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Knights.Domain.Common;
+using Microsoft.EntityFrameworkCore;
+
+namespace Knights.Infrastructure.Persistence.Configurations;
+
+internal static class EntityConfigurationExtensions
+{
+    /// <summary>
+    /// Configures the members shared by every entity: the domain-generated primary key
+    /// (never DB-generated) and the JSON-backed additional properties bag.
+    /// </summary>
+    public static void ConfigureBaseEntity<TEntity>(this EntityTypeBuilder<TEntity> builder)
+        where TEntity : BaseEntity
+    {
+        builder.HasKey(entity => entity.Id);
+        builder.Property(entity => entity.Id).ValueGeneratedNever();
+
+        builder.Property<string?>("_additionalPropertiesJson")
+            .HasColumnName("AdditionalProperties");
+    }
+}
