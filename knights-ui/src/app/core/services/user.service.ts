@@ -9,6 +9,10 @@ export class UserService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
+  getAll(): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`${this.base}/api/users`);
+  }
+
   getById(id: string): Observable<UserResponse> {
     return this.http.get<UserResponse>(`${this.base}/api/users/${id}`);
   }

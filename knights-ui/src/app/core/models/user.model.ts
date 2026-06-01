@@ -6,8 +6,11 @@ export interface UserResponse {
   userName: string;
   email: string;
   isEmailConfirmed: boolean;
-  roles?: RoleResponse[];
-  permissions?: PermissionResponse[];
+  isActive: boolean;
+  lastLoginDate?: string;
+  tenantId?: string;
+  roleIds: string[];
+  permissionIds: string[];
 }
 
 export interface CreateUserRequest {
@@ -28,6 +31,3 @@ export interface UpdateUserRequest {
   email: string;
   isEmailConfirmed: boolean;
 }
-
-import { RoleResponse } from './role.model';
-import { PermissionResponse } from './permission.model';

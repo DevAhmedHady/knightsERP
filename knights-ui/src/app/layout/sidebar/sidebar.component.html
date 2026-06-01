@@ -67,10 +67,19 @@
     <div
       class="app-sidebar__profile"
       [class.justify-center]="isDesktop() && desktopCollapsed()">
-      <div class="app-sidebar__profile-avatar">AU</div>
+      <div class="app-sidebar__profile-avatar">{{ initials }}</div>
       <div class="min-w-0" [class.hidden]="isDesktop() && desktopCollapsed()">
-        <p class="app-sidebar__profile-name">Admin User</p>
-        <p class="app-sidebar__profile-email">admin@knights.local</p>
+        <p class="app-sidebar__profile-name">{{ displayName }}</p>
+        <p class="app-sidebar__profile-email">{{ displayEmail }}</p>
+        @if (!isSystemAdmin) {
+          <span class="inline-block mt-0.5 rounded-full bg-[var(--surface-100)] px-2 py-0.5 text-[10px] font-mono text-[var(--surface-600)]">
+            {{ tenantCodeName }}
+          </span>
+        } @else {
+          <span class="inline-block mt-0.5 rounded-full bg-[var(--surface-200)] px-2 py-0.5 text-[10px] font-semibold text-[var(--surface-500)]">
+            System Admin
+          </span>
+        }
       </div>
     </div>
   </div>

@@ -6,6 +6,16 @@ namespace Knights.Infrastructure.Persistence.Repositories;
 
 public sealed class UserRepository(KnightsDbContext dbContext) : IUserRepository
 {
+    public async Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Include(user => user.UserRoles)
+            .Include(user => user.UserPermissions)
+            .OrderBy(user => user.UserName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await dbContext.Users

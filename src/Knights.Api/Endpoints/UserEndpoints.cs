@@ -13,6 +13,9 @@ public static class UserEndpoints
         group.MapPost("", CreateUserAsync)
             .WithName("CreateUser");
 
+        group.MapGet("", GetAllUsersAsync)
+            .WithName("GetAllUsers");
+
         group.MapGet("/{id:guid}", GetUserByIdAsync)
             .WithName("GetUserById");
 
@@ -35,6 +38,14 @@ public static class UserEndpoints
     {
         var user = await userService.CreateAsync(request, cancellationToken);
         return Results.Created($"/api/users/{user.Id}", user);
+    }
+
+    private static async Task<IResult> GetAllUsersAsync(
+        IUserService userService,
+        CancellationToken cancellationToken)
+    {
+        var users = await userService.GetAllAsync(cancellationToken);
+        return Results.Ok(users);
     }
 
     private static async Task<IResult> GetUserByIdAsync(

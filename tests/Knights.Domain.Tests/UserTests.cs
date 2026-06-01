@@ -37,4 +37,46 @@ public class UserTests
         Assert.Single(user.UserPermissions);
         Assert.Equal(permissionId, user.UserPermissions.Single().PermissionId);
     }
+
+    [Fact]
+    public void Create_WithoutTenant_IsSystemAdmin()
+    {
+        var user = User.Create("Ahmed", "Hady", "Ali", "ahmed", "ahmed@example.com");
+
+        Assert.Null(user.TenantId);
+        Assert.True(user.IsSystemAdmin);
+    }
+
+    [Fact]
+    public void JoinTenant_SetsTenantId()
+    {
+        var user = User.Create("Ahmed", "Hady", "Ali", "ahmed", "ahmed@example.com");
+        var tenantId = Guid.NewGuid();
+
+        user.JoinTenant(tenantId);
+
+        Assert.Equal(tenantId, user.TenantId);
+        Assert.False(user.IsSystemAdmin);
+    }
+
+    [Fact]
+    public void LeaveTenant_ClearsTenantId()
+    {
+        var user = User.Create("Ahmed", "Hady", "Ali", "ahmed", "ahmed@example.com");
+        var tenantId = Guid.NewGuid();
+
+        user.JoinTenant(tenantId);
+        user.LeaveTenant();
+
+        Assert.Null(user.TenantId);
+        Assert.True(user.IsSystemAdmin);
+    }
+
+    [Fact]
+    public void JoinTenant_WithEmptyGuid_ThrowsValidationException()
+    {
+        var user = User.Create("Ahmed", "Hady", "Ali", "ahmed", "ahmed@example.com");
+
+        Assert.Throws<ValidationException>(() => user.JoinTenant(Guid.Empty));
+    }
 }

@@ -1,0 +1,214 @@
+<div class="space-y-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="app-page-title">Tenants</h2>
+      <p class="app-subtitle mt-1">Manage tenants, their roles, permissions, and members</p>
+    </div>
+    <p-button label="New Tenant" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="app-panel overflow-x-auto">
+    <p-table
+      #dt
+      [value]="tenants()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      dataKey="id"
+      [globalFilterFields]="['codeName', 'name']"
+      [tableStyle]="{'min-width':'52rem'}"
+      styleClass="p-datatable-sm">
+      <ng-template pTemplate="caption">
+        <div class="app-table-caption">
+          <div class="app-table-caption__copy">
+            <span class="app-table-caption__kicker">Multi-tenancy</span>
+            <h3 class="app-table-caption__title">Tenants overview</h3>
+            <p class="app-table-caption__subtitle">Each tenant has its own roles, permissions, and members.</p>
+            <span class="app-count-pill">{{ tenants().length }} tenants</span>
+          </div>
+          <div class="app-search-field">
+            <i class="pi pi-search text-sm"></i>
+            <input pInputText type="text" placeholder="Search tenants..."
+                   class="text-sm" (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+          <th>Code Name</th>
+          <th>Status</th>
+          <th>Expiry</th>
+          <th>Roles</th>
+          <th style="width:10rem">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-tenant>
+        <tr>
+          <td>
+            <div class="app-entity">
+              <span class="app-entity__avatar"><i class="pi pi-building text-sm"></i></span>
+              <div class="min-w-0">
+                <span class="app-entity__name">{{ tenant.name }}</span>
+                <span class="app-entity__meta">{{ tenant.description || 'No description' }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="font-mono text-xs text-[var(--surface-600)]">{{ tenant.codeName }}</td>
+          <td>
+            <span class="app-status-pill"
+              [class.app-status-pill-success]="tenant.isActive"
+              [class.app-status-pill-danger]="!tenant.isActive">
+              {{ tenant.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-sm text-[var(--surface-500)]">{{ tenant.expiryDate ? (tenant.expiryDate | date:'mediumDate') : '—' }}</td>
+          <td class="text-sm text-[var(--surface-600)]">{{ tenant.roleIds?.length ?? 0 }}</td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-cog" [rounded]="true" [text]="true" severity="info" pTooltip="Manage" (onClick)="openManage(tenant)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(tenant)" />
+              <p-button icon="pi pi-ban" [rounded]="true" [text]="true" severity="danger" pTooltip="Deactivate" (onClick)="confirmDeactivate(tenant)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="text-center py-8 text-[var(--surface-500)]">No tenants found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Create / Edit dialog -->
+<p-dialog
+  [header]="editingId() ? 'Edit Tenant' : 'New Tenant'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{width:'min(480px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  <form [formGroup]="form" class="app-dialog-form">
+    <div class="app-form-field">
+      <label>Code Name *</label>
+      <input pInputText formControlName="codeName" placeholder="ACME_CORP" />
+      @if (editingId()) {
+        <span class="text-xs text-[var(--surface-400)]">Code name cannot be changed after creation.</span>
+      }
+    </div>
+    <div class="app-form-field">
+      <label>Name *</label>
+      <input pInputText formControlName="name" placeholder="Acme Corporation" />
+    </div>
+    <div class="app-form-field">
+      <label>Description</label>
+      <input pInputText formControlName="description" placeholder="Optional description" />
+    </div>
+    <div class="app-form-field">
+      <label>Owner *</label>
+      <p-select
+        formControlName="ownerId"
+        [options]="ownerUserOptions()"
+        optionValue="value"
+        optionLabel="label"
+        [filter]="true"
+        filterBy="label,email"
+        placeholder="Select owner"
+        styleClass="w-full">
+        <ng-template pTemplate="selectedItem" let-option>
+          @if (option) {
+            <span>{{ option.label }}</span>
+          }
+        </ng-template>
+        <ng-template pTemplate="item" let-option>
+          <div class="flex flex-col">
+            <span class="text-sm font-medium">{{ option.label }}</span>
+            <span class="text-xs text-[var(--surface-500)]">{{ option.email }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+    <div class="app-form-field">
+      <label>Expiry Date</label>
+      <input pInputText formControlName="expiryDate" type="date" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+    <p-button [label]="editingId() ? 'Update' : 'Create'" (onClick)="save()" [disabled]="form.invalid" />
+  </ng-template>
+</p-dialog>
+
+<!-- Manage roles + members dialog -->
+<p-dialog
+  header="Manage Tenant"
+  [(visible)]="manageDialogVisible"
+  [modal]="true"
+  [style]="{width:'min(520px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  @if (selectedTenant(); as t) {
+    <div class="space-y-5 pt-2">
+
+      <div>
+        <h4 class="text-sm font-semibold text-[var(--surface-700)] mb-2">Roles</h4>
+        <div class="flex gap-2 mb-2">
+          <input pInputText [value]="roleIdInput()" (input)="roleIdInput.set($any($event.target).value)"
+                 placeholder="Role GUID" class="flex-1 text-sm" />
+          <p-button label="Assign" size="small" (onClick)="assignRole()" [disabled]="!roleIdInput().trim()" />
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          @for (rId of t.roleIds; track rId) {
+            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--surface-100)] px-2.5 py-0.5 text-xs font-mono">
+              {{ rId | slice:0:8 }}…
+              <button class="ml-1 text-[var(--danger-500)] hover:text-[var(--danger-700)]" (click)="removeRole(rId)">×</button>
+            </span>
+          }
+          @if (!t.roleIds.length) {
+            <span class="text-xs text-[var(--surface-400)]">No roles assigned.</span>
+          }
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-semibold text-[var(--surface-700)] mb-2">Add Member</h4>
+        <form [formGroup]="memberForm" class="flex gap-2">
+          <p-select
+            formControlName="userId"
+            [options]="availableMemberUserOptions()"
+            optionValue="value"
+            optionLabel="label"
+            [filter]="true"
+            filterBy="label,email"
+            placeholder="Select user"
+            styleClass="w-full text-sm">
+            <ng-template pTemplate="selectedItem" let-option>
+              @if (option) {
+                <span>{{ option.label }}</span>
+              }
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium">{{ option.label }}</span>
+                <span class="text-xs text-[var(--surface-500)]">{{ option.email }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          <p-button label="Add" size="small" (onClick)="addMember()" [disabled]="memberForm.invalid" />
+        </form>
+      </div>
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Done" (onClick)="manageDialogVisible.set(false)" />
+  </ng-template>
+</p-dialog>

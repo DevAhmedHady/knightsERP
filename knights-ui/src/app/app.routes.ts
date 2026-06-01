@@ -18,6 +18,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
+        path: 'tenants',
+        loadComponent: () => import('./features/tenants/tenants-list/tenants-list.component').then(m => m.TenantsListComponent)
+      },
+      {
         path: 'users',
         loadComponent: () => import('./features/users/users-list/users-list.component').then(m => m.UsersListComponent)
       },

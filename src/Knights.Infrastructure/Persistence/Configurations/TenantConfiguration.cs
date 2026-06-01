@@ -21,5 +21,9 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Navigation(tenant => tenant.TenantRoles)
             .HasField("_roles")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(tenant => tenant.TenantPermissions)
+            .HasField("_permissions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

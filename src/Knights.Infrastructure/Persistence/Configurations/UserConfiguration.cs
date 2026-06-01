@@ -27,6 +27,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         });
         builder.Navigation(user => user.Name).IsRequired();
 
+        builder.Property(user => user.TenantId).IsRequired(false);
+        builder.HasOne<Knights.Domain.Tenants.Tenant>()
+            .WithMany()
+            .HasForeignKey(user => user.TenantId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
         builder.Navigation(user => user.UserRoles)
             .HasField("_roles")
             .UsePropertyAccessMode(PropertyAccessMode.Field);

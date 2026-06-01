@@ -67,6 +67,34 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_ReturnsUsersForSelection()
+    {
+        var repository = new InMemoryUserRepository();
+        var service = CreateService(repository);
+        await repository.AddAsync(User.Create("Zed", "M", "Admin", "zed", "zed@example.com"));
+        await repository.AddAsync(User.Create("Ada", "M", "Admin", "ada", "ada@example.com"));
+
+        var response = await service.GetAllAsync();
+
+        Assert.Equal(["ada", "zed"], response.Select(user => user.UserName));
+    }
+
+    [Fact]
+    public async Task GetAllAsync_IncludesTenantIdForAssignedUsers()
+    {
+        var repository = new InMemoryUserRepository();
+        var service = CreateService(repository);
+        var tenantId = Guid.NewGuid();
+        var user = User.Create("Ada", "M", "Admin", "ada", "ada@example.com");
+        user.JoinTenant(tenantId);
+        await repository.AddAsync(user);
+
+        var response = await service.GetAllAsync();
+
+        Assert.Equal(tenantId, response.Single().TenantId);
+    }
+
+    [Fact]
     public async Task AssignRoleAsync_UsesDomainBehaviorAndMapsRoleIds()
     {
         var repository = new InMemoryUserRepository();

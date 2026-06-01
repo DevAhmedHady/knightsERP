@@ -10,5 +10,6 @@ public sealed record UserResponse(
     bool IsEmailConfirmed,
     bool IsActive,
     DateTime? LastLoginDate,
+    Guid? TenantId,
     IReadOnlyCollection<Guid> RoleIds,
     IReadOnlyCollection<Guid> PermissionIds);

@@ -39,6 +39,12 @@ public sealed class UserService(IUserRepository userRepository, IPasswordHasher 
         return user?.Adapt<UserResponse>();
     }
 
+    public async Task<IReadOnlyCollection<UserResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await userRepository.GetAllAsync(cancellationToken);
+        return users.Adapt<IReadOnlyCollection<UserResponse>>();
+    }
+
     public async Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await GetRequiredUserAsync(id, cancellationToken);

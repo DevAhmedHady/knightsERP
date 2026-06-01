@@ -13,6 +13,7 @@ public sealed class KnightsDbContext(DbContextOptions<KnightsDbContext> options)
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantRole> TenantRoles => Set<TenantRole>();
+    public DbSet<TenantPermission> TenantPermissions => Set<TenantPermission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -9,6 +9,12 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public int UpdateCount { get; private set; }
 
+    public Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyCollection<User>>(
+            _users.Values.OrderBy(user => user.UserName).ToList());
+    }
+
     public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _users.TryGetValue(id, out var user);

@@ -19,6 +19,8 @@ public class User : AuditedEntity
     public bool IsEmailConfirmed { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime? LastLoginDate { get; private set; }
+    public Guid? TenantId { get; private set; }
+    public bool IsSystemAdmin => TenantId is null;
     public IReadOnlyCollection<UserRole> UserRoles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserPermission> UserPermissions => _permissions.AsReadOnly();
 
@@ -120,6 +122,17 @@ public class User : AuditedEntity
         _permissions.RemoveAll(permission => permission.PermissionId == permissionId);
     }
 
+    public void JoinTenant(Guid tenantId)
+    {
+        ValidationRules.IsNotEmpty(nameof(tenantId), tenantId);
+        TenantId = tenantId;
+    }
+
+    public void LeaveTenant()
+    {
+        TenantId = null;
+    }
+
     public override bool Equals(BaseEntity? other)
     {
         if (other is not User otherUser)
@@ -132,7 +145,8 @@ public class User : AuditedEntity
                PasswordHash == otherUser.PasswordHash &&
                IsEmailConfirmed == otherUser.IsEmailConfirmed &&
                IsActive == otherUser.IsActive &&
-               LastLoginDate == otherUser.LastLoginDate;
+               LastLoginDate == otherUser.LastLoginDate &&
+               TenantId == otherUser.TenantId;
     }
 
     private static void Validate(string userName, string email)

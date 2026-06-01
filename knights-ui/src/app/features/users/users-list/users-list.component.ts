@@ -46,7 +46,16 @@ export class UsersListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loading.set(false);
+    this.userService.getAll().subscribe({
+      next: users => {
+        this.users.set(users);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
+      }
+    });
   }
 
   openCreate(): void {

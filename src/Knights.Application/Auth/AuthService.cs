@@ -11,7 +11,8 @@ namespace Knights.Application.Auth;
 public sealed class AuthService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    IJwtTokenGenerator tokenGenerator) : IAuthService
+    IJwtTokenGenerator tokenGenerator,
+    ITenantRepository tenantRepository) : IAuthService
 {
     static AuthService()
     {
@@ -31,11 +32,28 @@ public sealed class AuthService(
         if (!passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
+        Guid? tenantId = null;
+        string? tenantCodeName = null;
+
+        if (!user.IsSystemAdmin)
+        {
+            // Tenant users must provide a valid TenantCodeName matching their tenant
+            if (string.IsNullOrWhiteSpace(request.TenantCodeName))
+                return null;
+
+            var tenant = await tenantRepository.GetByCodeNameAsync(request.TenantCodeName.Trim(), cancellationToken);
+            if (tenant is null || tenant.Id != user.TenantId || !tenant.IsActive || tenant.IsExpired)
+                return null;
+
+            tenantId = tenant.Id;
+            tenantCodeName = tenant.CodeName;
+        }
+
         user.RecordLogin(DateTime.UtcNow);
         await userRepository.UpdateAsync(user, cancellationToken);
 
-        var token = tokenGenerator.Generate(user);
-        return new LoginResponse(token.Token, token.ExpiresAtUtc, user.Adapt<UserResponse>());
+        var token = tokenGenerator.Generate(user, tenantId, tenantCodeName);
+        return new LoginResponse(token.Token, token.ExpiresAtUtc, user.Adapt<UserResponse>(), tenantId, tenantCodeName);
     }
 
     private async Task<User?> ResolveUserAsync(string userNameOrEmail, CancellationToken cancellationToken)

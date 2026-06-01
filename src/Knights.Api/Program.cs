@@ -99,5 +99,6 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapRoleEndpoints();
 app.MapPermissionEndpoints();
+app.MapTenantEndpoints();
 
 app.Run();

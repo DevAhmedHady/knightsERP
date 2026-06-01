@@ -23,7 +23,8 @@ export class LoginComponent {
 
   form = this.fb.group({
     userNameOrEmail: ['', Validators.required],
-    password: ['', Validators.required]
+    password: ['', Validators.required],
+    tenantCodeName: ['']
   });
 
   submit(): void {
@@ -33,16 +34,18 @@ export class LoginComponent {
     this.error.set(null);
 
     const value = this.form.getRawValue();
+    const tenantCode = value.tenantCodeName?.trim() || undefined;
 
     this.authService.login({
       userNameOrEmail: value.userNameOrEmail!,
-      password: value.password!
+      password: value.password!,
+      tenantCodeName: tenantCode
     }).pipe(
       finalize(() => this.pending.set(false))
     ).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: (err: HttpErrorResponse) => {
-        this.error.set(err.status === 401 ? 'Invalid username or password.' : 'Sign in failed.');
+        this.error.set(err.status === 401 ? 'Invalid credentials or tenant code.' : 'Sign in failed.');
       }
     });
   }

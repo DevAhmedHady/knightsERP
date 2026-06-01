@@ -1,8 +1,10 @@
 using Mapster;
 using Knights.Application.Permissions.Responses;
 using Knights.Application.Roles.Responses;
+using Knights.Application.Tenants.Responses;
 using Knights.Application.Users.Responses;
 using Knights.Domain.Identity;
+using Knights.Domain.Tenants;
 
 namespace Knights.Application.Common.Mapping;
 
@@ -25,6 +27,10 @@ public static class MapsterConfig
             .Map(destination => destination.PermissionIds, source => source.Permissions.Select(rp => rp.PermissionId).ToArray());
 
         config.NewConfig<Permission, PermissionResponse>();
+
+        config.NewConfig<Tenant, TenantResponse>()
+            .Map(dest => dest.RoleIds, src => src.TenantRoles.Select(tr => tr.RoleId).ToArray())
+            .Map(dest => dest.PermissionIds, src => src.TenantPermissions.Select(tp => tp.PermissionId).ToArray());
 
         return config;
     }

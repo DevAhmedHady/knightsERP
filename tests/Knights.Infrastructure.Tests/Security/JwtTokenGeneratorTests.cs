@@ -13,7 +13,7 @@ public sealed class JwtTokenGeneratorTests
         var generator = CreateGenerator();
         var user = CreateUser();
 
-        var token = generator.Generate(user);
+        var token = generator.Generate(user, null, null);
 
         Assert.False(string.IsNullOrWhiteSpace(token.Token));
         Assert.True(token.ExpiresAtUtc > DateTime.UtcNow);
@@ -25,7 +25,7 @@ public sealed class JwtTokenGeneratorTests
         var generator = CreateGenerator();
         var user = CreateUser();
 
-        var token = generator.Generate(user);
+        var token = generator.Generate(user, null, null);
         var parsedToken = new JwtSecurityTokenHandler().ReadJwtToken(token.Token);
 
         Assert.Equal("i", parsedToken.Issuer);
