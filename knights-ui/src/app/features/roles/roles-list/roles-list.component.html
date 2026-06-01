@@ -11,7 +11,32 @@
   </div>
 
   <div class="app-panel overflow-x-auto">
-    <p-table [value]="roles()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{'min-width':'56rem'}" styleClass="p-datatable-sm">
+    <p-table
+      #dt
+      [value]="roles()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      dataKey="id"
+      [globalFilterFields]="['name', 'description']"
+      [tableStyle]="{'min-width':'56rem'}"
+      styleClass="p-datatable-sm">
+      <ng-template pTemplate="caption">
+        <div class="app-table-caption">
+          <div class="app-table-caption__copy">
+            <span class="app-table-caption__kicker">Authorization</span>
+            <h3 class="app-table-caption__title">Roles overview</h3>
+            <p class="app-table-caption__subtitle">Keep role definitions tidy, active, and aligned to policy.</p>
+            <span class="app-count-pill">{{ roles().length }} roles</span>
+          </div>
+          <div class="app-search-field">
+            <i class="pi pi-search text-sm"></i>
+            <input pInputText type="text" placeholder="Search roles..." class="text-sm"
+                   (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </div>
+        </div>
+      </ng-template>
+
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
@@ -25,20 +50,33 @@
 
       <ng-template pTemplate="body" let-role>
         <tr>
-          <td class="font-medium">{{ role.name }}</td>
+          <td>
+            <div class="app-entity">
+              <span class="app-entity__avatar"><i class="pi pi-shield text-sm"></i></span>
+              <div class="min-w-0">
+                <span class="app-entity__name">{{ role.name }}</span>
+                <span class="app-entity__meta">{{ role.description || 'No description provided' }}</span>
+              </div>
+            </div>
+          </td>
           <td class="text-[var(--surface-500)] text-sm">{{ role.description || '-' }}</td>
           <td>
-            <span [class]="role.isStatic ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--primary-100)] text-[var(--primary-700)]' : 'text-[var(--surface-500)] text-xs'">
+            <span
+              [class]="role.isStatic ? 'app-status-pill app-status-pill-primary' : 'text-[var(--surface-500)] text-xs font-semibold'">
               {{ role.isStatic ? 'Yes' : 'No' }}
             </span>
           </td>
           <td>
-            <span [class]="role.isDefault ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--warning-100)] text-[var(--warning-700)]' : 'text-[var(--surface-500)] text-xs'">
+            <span
+              [class]="role.isDefault ? 'app-status-pill app-status-pill-warning' : 'text-[var(--surface-500)] text-xs font-semibold'">
               {{ role.isDefault ? 'Yes' : 'No' }}
             </span>
           </td>
           <td>
-            <span [class]="role.isActive ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--accent-100)] text-[var(--accent-700)]' : 'px-2 py-0.5 rounded-full text-xs bg-[var(--danger-100)] text-[var(--danger-700)]'">
+            <span
+              class="app-status-pill"
+              [class.app-status-pill-success]="role.isActive"
+              [class.app-status-pill-danger]="!role.isActive">
               {{ role.isActive ? 'Active' : 'Inactive' }}
             </span>
           </td>
@@ -66,13 +104,13 @@
   [style]="{width:'min(440px, calc(100vw - 2rem))'}"
   [draggable]="false">
 
-  <form [formGroup]="form" class="space-y-4 pt-2">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Name *</label>
+  <form [formGroup]="form" class="app-dialog-form">
+    <div class="app-form-field">
+      <label>Name *</label>
       <input pInputText formControlName="name" placeholder="Role name" />
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Description</label>
+    <div class="app-form-field">
+      <label>Description</label>
       <input pInputText formControlName="description" placeholder="Optional description" />
     </div>
     <div class="flex flex-col gap-2">
@@ -106,7 +144,7 @@
 
   <div class="space-y-2 pt-2 max-h-80 overflow-y-auto">
     @for (perm of allPermissions(); track perm.id) {
-      <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--surface-50)]">
+      <div class="app-selection-row">
         <p-checkbox
           [binary]="true"
           [ngModel]="selectedPermIds().has(perm.id)"

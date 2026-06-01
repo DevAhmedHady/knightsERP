@@ -23,8 +23,13 @@
       styleClass="p-datatable-sm">
 
       <ng-template pTemplate="caption">
-        <div class="app-table-toolbar">
-          <span class="app-table-toolbar-title">Directory</span>
+        <div class="app-table-caption">
+          <div class="app-table-caption__copy">
+            <span class="app-table-caption__kicker">Directory</span>
+            <h3 class="app-table-caption__title">User directory</h3>
+            <p class="app-table-caption__subtitle">Review identities, confirmation state, and account records.</p>
+            <span class="app-count-pill">{{ users().length }} records</span>
+          </div>
           <div class="app-search-field">
             <i class="pi pi-search text-sm"></i>
             <input pInputText type="text" placeholder="Search users..."
@@ -46,13 +51,22 @@
 
       <ng-template pTemplate="body" let-user>
         <tr>
-          <td>{{ user.firstName }} {{ user.lastName }}</td>
-          <td>{{ user.userName }}</td>
-          <td>{{ user.email }}</td>
           <td>
-            <span [class]="user.isEmailConfirmed
-              ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--accent-100)] text-[var(--accent-700)]'
-              : 'px-2 py-0.5 rounded-full text-xs bg-[var(--danger-100)] text-[var(--danger-700)]'">
+            <div class="app-entity">
+              <span class="app-entity__avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</span>
+              <div class="min-w-0">
+                <span class="app-entity__name">{{ user.firstName }} {{ user.lastName }}</span>
+                <span class="app-entity__meta">{{ user.email }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="font-semibold text-[var(--surface-700)]">{{ user.userName }}</td>
+          <td class="text-[var(--surface-500)]">{{ user.email }}</td>
+          <td>
+            <span
+              class="app-status-pill"
+              [class.app-status-pill-success]="user.isEmailConfirmed"
+              [class.app-status-pill-danger]="!user.isEmailConfirmed">
               {{ user.isEmailConfirmed ? 'Yes' : 'No' }}
             </span>
           </td>
@@ -79,33 +93,34 @@
   [style]="{width:'min(480px, calc(100vw - 2rem))'}"
   [draggable]="false">
 
-  <form [formGroup]="form" class="space-y-4 pt-2">
+  <form [formGroup]="form" class="app-dialog-form">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-[var(--surface-700)]">First Name *</label>
+      <div class="app-form-field">
+        <label>First Name *</label>
         <input pInputText formControlName="firstName" placeholder="First name" />
       </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-[var(--surface-700)]">Last Name *</label>
+      <div class="app-form-field">
+        <label>Last Name *</label>
         <input pInputText formControlName="lastName" placeholder="Last name" />
       </div>
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Middle Name</label>
+    <div class="app-form-field">
+      <label>Middle Name</label>
       <input pInputText formControlName="midName" placeholder="Optional" />
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Username *</label>
+    <div class="app-form-field">
+      <label>Username *</label>
       <input pInputText formControlName="userName" placeholder="username" />
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Email *</label>
+    <div class="app-form-field">
+      <label>Email *</label>
       <input pInputText formControlName="email" type="email" placeholder="user@example.com" />
     </div>
     @if (!editingId()) {
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-[var(--surface-700)]">Password</label>
+      <div class="app-form-field">
+        <label>Password</label>
         <input pInputText formControlName="password" type="password" placeholder="Password" />
+        <span class="app-field-hint">Use a strong temporary password for first access.</span>
       </div>
     }
     <div class="flex items-center gap-2">

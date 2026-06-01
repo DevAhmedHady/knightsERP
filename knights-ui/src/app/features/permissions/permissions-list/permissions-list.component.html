@@ -11,7 +11,32 @@
   </div>
 
   <div class="app-panel overflow-x-auto">
-    <p-table [value]="permissions()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{'min-width':'50rem'}" styleClass="p-datatable-sm">
+    <p-table
+      #dt
+      [value]="permissions()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      dataKey="id"
+      [globalFilterFields]="['codeName', 'displayName', 'description']"
+      [tableStyle]="{'min-width':'50rem'}"
+      styleClass="p-datatable-sm">
+      <ng-template pTemplate="caption">
+        <div class="app-table-caption">
+          <div class="app-table-caption__copy">
+            <span class="app-table-caption__kicker">Capability map</span>
+            <h3 class="app-table-caption__title">Permissions registry</h3>
+            <p class="app-table-caption__subtitle">Track code-level permissions with clean naming and descriptions.</p>
+            <span class="app-count-pill">{{ permissions().length }} permissions</span>
+          </div>
+          <div class="app-search-field">
+            <i class="pi pi-search text-sm"></i>
+            <input pInputText type="text" placeholder="Search permissions..." class="text-sm"
+                   (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </div>
+        </div>
+      </ng-template>
+
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="codeName">Code Name <p-sortIcon field="codeName" /></th>
@@ -24,9 +49,17 @@
       <ng-template pTemplate="body" let-perm>
         <tr>
           <td>
-            <code class="px-2 py-0.5 rounded bg-[var(--surface-100)] text-[var(--primary-700)] text-xs font-mono">{{ perm.codeName }}</code>
+            <code class="app-code-pill">{{ perm.codeName }}</code>
           </td>
-          <td class="font-medium">{{ perm.displayName }}</td>
+          <td>
+            <div class="app-entity">
+              <span class="app-entity__avatar"><i class="pi pi-key text-sm"></i></span>
+              <div class="min-w-0">
+                <span class="app-entity__name">{{ perm.displayName }}</span>
+                <span class="app-entity__meta">{{ perm.description || 'No description provided' }}</span>
+              </div>
+            </div>
+          </td>
           <td class="text-[var(--surface-500)] text-sm">{{ perm.description || '-' }}</td>
           <td>
             <div class="flex gap-2">
@@ -51,18 +84,18 @@
   [style]="{width:'min(440px, calc(100vw - 2rem))'}"
   [draggable]="false">
 
-  <form [formGroup]="form" class="space-y-4 pt-2">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Code Name *</label>
+  <form [formGroup]="form" class="app-dialog-form">
+    <div class="app-form-field">
+      <label>Code Name *</label>
       <input pInputText formControlName="codeName" placeholder="e.g. users.read" />
-      <span class="text-xs text-[var(--surface-500)]">Immutable once created.</span>
+      <span class="app-field-hint">Immutable once created.</span>
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Display Name *</label>
+    <div class="app-form-field">
+      <label>Display Name *</label>
       <input pInputText formControlName="displayName" placeholder="Human-readable name" />
     </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium text-[var(--surface-700)]">Description</label>
+    <div class="app-form-field">
+      <label>Description</label>
       <textarea pTextarea formControlName="description" rows="3" placeholder="Optional description" class="w-full"></textarea>
     </div>
   </form>

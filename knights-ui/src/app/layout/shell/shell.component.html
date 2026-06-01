@@ -1,21 +1,29 @@
-<div class="flex h-screen overflow-hidden">
-  <app-sidebar [collapsed]="sidebarCollapsed()" (closeSidebar)="sidebarCollapsed.set(true)" />
+<div class="app-shell flex min-h-screen overflow-hidden">
+  <app-sidebar
+    [isDesktop]="isDesktop()"
+    [desktopCollapsed]="desktopSidebarCollapsed()"
+    [mobileOpen]="mobileSidebarOpen()"
+    (toggleSidebar)="toggleSidebar()"
+    (closeSidebar)="closeSidebar()" />
 
-  <div class="app-main flex flex-col flex-1 min-w-0 transition-all duration-300"
-       [class.sidebar-open]="!sidebarCollapsed()">
+  <div
+    class="app-main flex min-w-0 flex-1 flex-col transition-all duration-300"
+    [class.sidebar-expanded]="isDesktop() && !desktopSidebarCollapsed()"
+    [class.sidebar-collapsed]="isDesktop() && desktopSidebarCollapsed()">
 
     <app-topbar (toggleSidebar)="toggleSidebar()" />
 
     <main class="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
-      <div class="w-full">
+      <div class="app-content-shell w-full">
         <router-outlet />
       </div>
     </main>
   </div>
 </div>
 
-@if (!sidebarCollapsed()) {
-  <div class="fixed inset-0 bg-black/40 z-20 lg:hidden"
-       (click)="sidebarCollapsed.set(true)">
+@if (!isDesktop() && mobileSidebarOpen()) {
+  <div
+    class="fixed inset-0 z-20 bg-[rgb(11_18_32_/_0.45)] backdrop-blur-[2px] lg:hidden"
+    (click)="closeSidebar()">
   </div>
 }

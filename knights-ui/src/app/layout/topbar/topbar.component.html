@@ -1,29 +1,46 @@
-<header class="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-6 h-16 bg-[var(--surface-0)] backdrop-blur border-b border-[var(--surface-200)]">
-  <div class="flex items-center gap-4">
+<header class="app-topbar sticky top-0 z-10 flex h-20 items-center justify-between gap-4 px-4 sm:px-6">
+  <div class="flex min-w-0 items-center gap-4">
     <button
       (click)="toggleSidebar.emit()"
       type="button"
       aria-label="Toggle sidebar"
-      class="w-10 h-10 rounded-xl border border-[var(--surface-200)] bg-[var(--surface-0)] hover:bg-[var(--surface-100)] text-[var(--surface-500)] hover:text-[var(--surface-900)] transition-colors">
+      class="app-icon-button shrink-0">
       <i class="pi pi-bars text-lg"></i>
     </button>
-    <div>
-      <h1 class="text-base font-extrabold text-[var(--surface-900)]">Knights Admin</h1>
-      <p class="hidden sm:block text-xs text-[var(--surface-500)]">Access, roles, and permissions</p>
+    <div class="min-w-0">
+      <span class="app-topbar__eyebrow">Operations cockpit</span>
+      <h1 class="app-topbar__title">Knights Admin</h1>
     </div>
   </div>
 
-  <div class="flex items-center gap-3">
+  <div class="hidden min-w-0 flex-1 items-center justify-center xl:flex">
+    <label class="app-topbar-search">
+      <i class="pi pi-search"></i>
+      <input type="text" placeholder="Search users, roles, permissions" />
+      <span class="app-topbar-search__hint">Ctrl K</span>
+    </label>
+  </div>
+
+  <div class="flex items-center gap-2 sm:gap-3">
+    <div class="app-topbar-chip hidden lg:flex">
+      <i class="pi pi-star-fill text-xs"></i>
+      <span>June access review</span>
+    </div>
+
     <button
       (click)="themeService.toggle()"
       type="button"
       [attr.aria-label]="themeService.isDark() ? 'Use light mode' : 'Use dark mode'"
-      class="w-10 h-10 rounded-xl border border-[var(--surface-200)] bg-[var(--surface-0)] hover:bg-[var(--surface-100)] text-[var(--surface-500)] hover:text-[var(--surface-900)] transition-colors">
+      class="app-icon-button">
       <i [class]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'" class="text-lg"></i>
     </button>
 
-    <div class="w-9 h-9 rounded-full bg-[var(--ink-strong)] ring-2 ring-[var(--surface-0)] flex items-center justify-center text-white text-xs font-bold cursor-pointer shadow-sm">
-      AU
+    <div class="app-topbar-profile">
+      <div class="app-topbar-profile__avatar">AU</div>
+      <div class="hidden text-left xl:block">
+        <p class="app-topbar-profile__name">Admin User</p>
+        <p class="app-topbar-profile__role">Security Admin</p>
+      </div>
     </div>
   </div>
 </header>

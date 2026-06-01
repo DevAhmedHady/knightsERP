@@ -10,16 +10,34 @@ import { TopbarComponent } from '../topbar/topbar.component';
   templateUrl: './shell.component.html'
 })
 export class ShellComponent {
-  sidebarCollapsed = signal(typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
+  private readonly desktopBreakpoint = 1024;
+
+  isDesktop = signal(typeof window !== 'undefined' ? window.innerWidth >= this.desktopBreakpoint : true);
+  desktopSidebarCollapsed = signal(false);
+  mobileSidebarOpen = signal(false);
 
   toggleSidebar(): void {
-    this.sidebarCollapsed.update(v => !v);
+    if (this.isDesktop()) {
+      this.desktopSidebarCollapsed.update(value => !value);
+      return;
+    }
+
+    this.mobileSidebarOpen.update(value => !value);
+  }
+
+  closeSidebar(): void {
+    if (!this.isDesktop()) {
+      this.mobileSidebarOpen.set(false);
+    }
   }
 
   @HostListener('window:resize')
   onResize(): void {
-    if (window.innerWidth < 1024) {
-      this.sidebarCollapsed.set(true);
+    const nextIsDesktop = window.innerWidth >= this.desktopBreakpoint;
+    this.isDesktop.set(nextIsDesktop);
+
+    if (nextIsDesktop) {
+      this.mobileSidebarOpen.set(false);
     }
   }
 }

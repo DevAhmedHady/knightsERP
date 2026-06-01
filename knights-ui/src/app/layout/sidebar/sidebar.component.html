@@ -1,41 +1,76 @@
 <aside
-  class="fixed top-0 left-0 h-full z-30 flex flex-col bg-[var(--surface-0)] border-r border-[var(--surface-200)] shadow-sm transition-transform duration-300"
-  [style.width]="'var(--sidebar-width)'"
-  [class.-translate-x-full]="collapsed()">
+  class="app-sidebar fixed left-0 top-0 z-30 flex h-full flex-col transition-[width,transform] duration-300"
+  [class.-translate-x-full]="!isDesktop() && !mobileOpen()"
+  [class.translate-x-0]="isDesktop() || mobileOpen()"
+  [class.app-sidebar-collapsed]="isDesktop() && desktopCollapsed()"
+  [class.app-sidebar-expanded]="!isDesktop() || !desktopCollapsed()">
 
-  <div class="flex items-center gap-3 px-5 h-16 border-b border-[var(--surface-200)]">
-    <div class="w-9 h-9 rounded-lg bg-[var(--ink-strong)] flex items-center justify-center shadow-sm">
-      <i class="pi pi-shield text-white text-sm"></i>
+  <div class="app-sidebar__glow"></div>
+
+  <div
+    class="app-sidebar__header"
+    [class.justify-center]="isDesktop() && desktopCollapsed()">
+    <div class="app-sidebar__brand-mark">
+      <i class="pi pi-shield text-sm"></i>
     </div>
-    <div>
-      <span class="block text-base font-extrabold text-[var(--surface-900)]">Knights</span>
-      <span class="block text-xs text-[var(--surface-500)] leading-none">Admin console</span>
+    <div class="min-w-0" [class.hidden]="isDesktop() && desktopCollapsed()">
+      <span class="app-sidebar__brand-title">Knights</span>
+      <span class="app-sidebar__brand-subtitle">Access control cockpit</span>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Toggle sidebar"
+      class="app-sidebar__collapse-btn"
+      [class.hidden]="!isDesktop()"
+      (click)="toggleSidebar.emit()">
+      <i [class]="desktopCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'"></i>
+    </button>
+  </div>
+
+  <div class="px-4 pb-3 pt-4" [class.hidden]="isDesktop() && desktopCollapsed()">
+    <div class="app-sidebar__summary">
+      <span class="app-sidebar__summary-label">Security posture</span>
+      <strong>All controls healthy</strong>
+      <span>Role coverage synced across users and permissions.</span>
     </div>
   </div>
 
-  <nav class="flex-1 overflow-y-auto py-5 px-3">
-    <p class="text-xs font-bold text-[var(--surface-500)] uppercase px-3 mb-2">Main Menu</p>
+  <nav class="flex-1 overflow-y-auto px-3 py-4">
+    <p class="app-sidebar__section" [class.text-center]="isDesktop() && desktopCollapsed()">Core</p>
     <ul class="space-y-1.5">
       @for (item of navItems; track item.route) {
         <li>
-          <a [routerLink]="item.route"
-             routerLinkActive="bg-[var(--primary-50)] text-[var(--primary-700)] font-bold border-[var(--primary-200)]"
-             [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}"
-             class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent text-sm text-[var(--surface-600)] hover:bg-[var(--surface-100)] hover:text-[var(--surface-900)] transition-colors cursor-pointer">
-            <i [class]="item.icon" class="text-base w-5 shrink-0"></i>
-            <span>{{ item.label }}</span>
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="app-sidebar__link-active"
+            [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}"
+            [attr.aria-label]="item.label"
+            [attr.title]="isDesktop() && desktopCollapsed() ? item.label : null"
+            class="app-sidebar__link"
+            [class.justify-center]="isDesktop() && desktopCollapsed()"
+            (click)="closeOnMobile()">
+            <span class="app-sidebar__link-icon">
+              <i [class]="item.icon" class="text-base"></i>
+            </span>
+            <span class="min-w-0" [class.hidden]="isDesktop() && desktopCollapsed()">
+              <span class="app-sidebar__link-label">{{ item.label }}</span>
+              <span class="app-sidebar__link-meta">{{ item.shortLabel }}</span>
+            </span>
           </a>
         </li>
       }
     </ul>
   </nav>
 
-  <div class="p-4 border-t border-[var(--surface-200)]">
-    <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--surface-50)] border border-[var(--surface-200)]">
-      <div class="w-9 h-9 rounded-full bg-[var(--ink-strong)] flex items-center justify-center text-white text-xs font-bold">AU</div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold text-[var(--surface-900)] truncate">Admin User</p>
-        <p class="text-xs text-[var(--surface-500)] truncate">admin@knights.local</p>
+  <div class="mt-auto border-t border-[var(--surface-100)] p-4">
+    <div
+      class="app-sidebar__profile"
+      [class.justify-center]="isDesktop() && desktopCollapsed()">
+      <div class="app-sidebar__profile-avatar">AU</div>
+      <div class="min-w-0" [class.hidden]="isDesktop() && desktopCollapsed()">
+        <p class="app-sidebar__profile-name">Admin User</p>
+        <p class="app-sidebar__profile-email">admin@knights.local</p>
       </div>
     </div>
   </div>

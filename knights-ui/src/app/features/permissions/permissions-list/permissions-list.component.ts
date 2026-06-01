@@ -47,6 +47,7 @@ export class PermissionsListComponent implements OnInit {
 
   openCreate(): void {
     this.editingId.set(null);
+    this.form.get('codeName')?.enable();
     this.form.reset();
     this.dialogVisible.set(true);
   }
