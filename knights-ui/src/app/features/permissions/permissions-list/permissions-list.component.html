@@ -1,0 +1,74 @@
+<div class="space-y-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="app-page-title">Permissions</h2>
+      <p class="app-subtitle mt-1">Manage system permissions</p>
+    </div>
+    <p-button label="New Permission" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="app-panel overflow-x-auto">
+    <p-table [value]="permissions()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{'min-width':'50rem'}" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="codeName">Code Name <p-sortIcon field="codeName" /></th>
+          <th pSortableColumn="displayName">Display Name <p-sortIcon field="displayName" /></th>
+          <th>Description</th>
+          <th style="width:8rem">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-perm>
+        <tr>
+          <td>
+            <code class="px-2 py-0.5 rounded bg-[var(--surface-100)] text-[var(--primary-700)] text-xs font-mono">{{ perm.codeName }}</code>
+          </td>
+          <td class="font-medium">{{ perm.displayName }}</td>
+          <td class="text-[var(--surface-500)] text-sm">{{ perm.description || '-' }}</td>
+          <td>
+            <div class="flex gap-2">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(perm)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="confirmDelete(perm)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="4" class="text-center py-8 text-[var(--surface-500)]">No permissions found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editingId() ? 'Edit Permission' : 'New Permission'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{width:'min(440px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  <form [formGroup]="form" class="space-y-4 pt-2">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Code Name *</label>
+      <input pInputText formControlName="codeName" placeholder="e.g. users.read" />
+      <span class="text-xs text-[var(--surface-500)]">Immutable once created.</span>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Display Name *</label>
+      <input pInputText formControlName="displayName" placeholder="Human-readable name" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Description</label>
+      <textarea pTextarea formControlName="description" rows="3" placeholder="Optional description" class="w-full"></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+    <p-button [label]="editingId() ? 'Update' : 'Create'" (onClick)="save()" [disabled]="form.invalid" />
+  </ng-template>
+</p-dialog>

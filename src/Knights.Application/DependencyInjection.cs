@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Knights.Application.Auth;
 using Knights.Application.Common.Mapping;
 using Knights.Application.Permissions;
 using Knights.Application.Roles;
@@ -12,6 +13,7 @@ public static class DependencyInjection
     {
         MapsterConfig.Register();
 
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPermissionService, PermissionService>();

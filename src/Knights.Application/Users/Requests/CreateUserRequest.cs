@@ -6,5 +6,5 @@ public sealed record CreateUserRequest(
     string LastName,
     string UserName,
     string Email,
-    string? PasswordHash = null,
+    string? Password = null,
     bool IsEmailConfirmed = false);

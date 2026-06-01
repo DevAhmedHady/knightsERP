@@ -5,4 +5,5 @@
   <Project Path="src/Knights.Api/Knights.Api.csproj" />
   <Project Path="tests/Knights.Domain.Tests/Knights.Domain.Tests.csproj" />
   <Project Path="tests/Knights.Application.Tests/Knights.Application.Tests.csproj" />
+  <Project Path="tests/Knights.Infrastructure.Tests/Knights.Infrastructure.Tests.csproj" />
 </Solution>

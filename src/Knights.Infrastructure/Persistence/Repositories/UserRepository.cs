@@ -14,6 +14,24 @@ public sealed class UserRepository(KnightsDbContext dbContext) : IUserRepository
             .FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
     }
 
+    public async Task<User?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default)
+    {
+        var normalized = userName.Trim().ToLower();
+        return await dbContext.Users
+            .Include(user => user.UserRoles)
+            .Include(user => user.UserPermissions)
+            .FirstOrDefaultAsync(user => user.UserName.ToLower() == normalized, cancellationToken);
+    }
+
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.Trim().ToLower();
+        return await dbContext.Users
+            .Include(user => user.UserRoles)
+            .Include(user => user.UserPermissions)
+            .FirstOrDefaultAsync(user => user.Email.ToLower() == normalized, cancellationToken);
+    }
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         await dbContext.Users.AddAsync(user, cancellationToken);

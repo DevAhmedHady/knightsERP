@@ -1,0 +1,21 @@
+<div class="flex h-screen overflow-hidden">
+  <app-sidebar [collapsed]="sidebarCollapsed()" (closeSidebar)="sidebarCollapsed.set(true)" />
+
+  <div class="app-main flex flex-col flex-1 min-w-0 transition-all duration-300"
+       [class.sidebar-open]="!sidebarCollapsed()">
+
+    <app-topbar (toggleSidebar)="toggleSidebar()" />
+
+    <main class="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+      <div class="w-full">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>
+
+@if (!sidebarCollapsed()) {
+  <div class="fixed inset-0 bg-black/40 z-20 lg:hidden"
+       (click)="sidebarCollapsed.set(true)">
+  </div>
+}

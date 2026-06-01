@@ -1,0 +1,55 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-1">
+    <h2 class="app-page-title">Dashboard</h2>
+    <p class="app-subtitle">Operational snapshot for access management</p>
+  </div>
+
+  @if (loading()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (i of [1,2,3]; track i) {
+        <p-skeleton height="6rem" borderRadius="0.5rem" />
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div class="app-card p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-lg bg-[var(--primary-50)] flex items-center justify-center border border-[var(--primary-100)]">
+          <i class="pi pi-shield text-[var(--primary-600)] text-xl"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[var(--surface-500)]">Total Roles</p>
+          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ totalRoles() }}</p>
+        </div>
+      </div>
+
+      <div class="app-card p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-lg bg-[var(--accent-100)] flex items-center justify-center border border-[#b9ecd7]">
+          <i class="pi pi-check-circle text-[var(--accent-700)] text-xl"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[var(--surface-500)]">Active Roles</p>
+          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ activeRoles() }}</p>
+        </div>
+      </div>
+
+      <div class="app-card p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-lg bg-[var(--warning-100)] flex items-center justify-center border border-[#f4d977]">
+          <i class="pi pi-lock text-[var(--warning-700)] text-xl"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[var(--surface-500)]">Total Permissions</p>
+          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ totalPermissions() }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    @if (chartData()) {
+      <div class="app-panel p-5 sm:p-6">
+        <h3 class="text-base font-bold text-[var(--surface-900)] mb-4">Permission Distribution</h3>
+        <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions()" styleClass="max-h-64" />
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,129 @@
+<div class="space-y-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="app-page-title">Roles</h2>
+      <p class="app-subtitle mt-1">Manage roles and their permissions</p>
+    </div>
+    <p-button label="New Role" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="app-panel overflow-x-auto">
+    <p-table [value]="roles()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{'min-width':'56rem'}" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+          <th>Description</th>
+          <th>Static</th>
+          <th>Default</th>
+          <th>Active</th>
+          <th style="width:10rem">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-role>
+        <tr>
+          <td class="font-medium">{{ role.name }}</td>
+          <td class="text-[var(--surface-500)] text-sm">{{ role.description || '-' }}</td>
+          <td>
+            <span [class]="role.isStatic ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--primary-100)] text-[var(--primary-700)]' : 'text-[var(--surface-500)] text-xs'">
+              {{ role.isStatic ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td>
+            <span [class]="role.isDefault ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--warning-100)] text-[var(--warning-700)]' : 'text-[var(--surface-500)] text-xs'">
+              {{ role.isDefault ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td>
+            <span [class]="role.isActive ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--accent-100)] text-[var(--accent-700)]' : 'px-2 py-0.5 rounded-full text-xs bg-[var(--danger-100)] text-[var(--danger-700)]'">
+              {{ role.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-lock" [rounded]="true" [text]="true" severity="info" pTooltip="Permissions" (onClick)="openPermissions(role)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(role)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="confirmDelete(role)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="text-center py-8 text-[var(--surface-500)]">No roles found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editingId() ? 'Edit Role' : 'New Role'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{width:'min(440px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  <form [formGroup]="form" class="space-y-4 pt-2">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Name *</label>
+      <input pInputText formControlName="name" placeholder="Role name" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Description</label>
+      <input pInputText formControlName="description" placeholder="Optional description" />
+    </div>
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center gap-2">
+        <p-checkbox formControlName="isStatic" [binary]="true" inputId="isStatic" />
+        <label for="isStatic" class="text-sm text-[var(--surface-700)]">Static role</label>
+      </div>
+      <div class="flex items-center gap-2">
+        <p-checkbox formControlName="isDefault" [binary]="true" inputId="isDefault" />
+        <label for="isDefault" class="text-sm text-[var(--surface-700)]">Default role</label>
+      </div>
+      <div class="flex items-center gap-2">
+        <p-checkbox formControlName="isActive" [binary]="true" inputId="isActive" />
+        <label for="isActive" class="text-sm text-[var(--surface-700)]">Active</label>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+    <p-button [label]="editingId() ? 'Update' : 'Create'" (onClick)="save()" [disabled]="form.invalid" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Manage Permissions"
+  [(visible)]="permDialogVisible"
+  [modal]="true"
+  [style]="{width:'min(500px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  <div class="space-y-2 pt-2 max-h-80 overflow-y-auto">
+    @for (perm of allPermissions(); track perm.id) {
+      <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--surface-50)]">
+        <p-checkbox
+          [binary]="true"
+          [ngModel]="selectedPermIds().has(perm.id)"
+          (ngModelChange)="togglePermission(perm.id, selectedRole()!.id)"
+          [inputId]="'perm-' + perm.id" />
+        <label [for]="'perm-' + perm.id" class="flex-1 cursor-pointer">
+          <span class="text-sm font-medium text-[var(--surface-900)]">{{ perm.displayName }}</span>
+          <span class="block text-xs text-[var(--surface-500)]">{{ perm.codeName }}</span>
+        </label>
+      </div>
+    }
+    @if (allPermissions().length === 0) {
+      <p class="text-center text-sm text-[var(--surface-500)] py-4">No permissions available.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Done" (onClick)="permDialogVisible.set(false)" />
+  </ng-template>
+</p-dialog>

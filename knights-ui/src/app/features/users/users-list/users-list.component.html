@@ -1,0 +1,121 @@
+<div class="space-y-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="app-page-title">Users</h2>
+      <p class="app-subtitle mt-1">Manage system users</p>
+    </div>
+    <p-button label="New User" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="app-panel overflow-x-auto">
+    <p-table
+      #dt
+      [value]="users()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      dataKey="id"
+      [globalFilterFields]="['firstName','lastName','userName','email']"
+      [tableStyle]="{'min-width':'52rem'}"
+      styleClass="p-datatable-sm">
+
+      <ng-template pTemplate="caption">
+        <div class="app-table-toolbar">
+          <span class="app-table-toolbar-title">Directory</span>
+          <div class="app-search-field">
+            <i class="pi pi-search text-sm"></i>
+            <input pInputText type="text" placeholder="Search users..."
+                   class="text-sm"
+                   (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="firstName">Name <p-sortIcon field="firstName" /></th>
+          <th pSortableColumn="userName">Username <p-sortIcon field="userName" /></th>
+          <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
+          <th>Confirmed</th>
+          <th style="width:8rem">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.userName }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <span [class]="user.isEmailConfirmed
+              ? 'px-2 py-0.5 rounded-full text-xs bg-[var(--accent-100)] text-[var(--accent-700)]'
+              : 'px-2 py-0.5 rounded-full text-xs bg-[var(--danger-100)] text-[var(--danger-700)]'">
+              {{ user.isEmailConfirmed ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(user)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="confirmDelete(user)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="text-center py-8 text-[var(--surface-500)]">No users found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editingId() ? 'Edit User' : 'New User'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{width:'min(480px, calc(100vw - 2rem))'}"
+  [draggable]="false">
+
+  <form [formGroup]="form" class="space-y-4 pt-2">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[var(--surface-700)]">First Name *</label>
+        <input pInputText formControlName="firstName" placeholder="First name" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[var(--surface-700)]">Last Name *</label>
+        <input pInputText formControlName="lastName" placeholder="Last name" />
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Middle Name</label>
+      <input pInputText formControlName="midName" placeholder="Optional" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Username *</label>
+      <input pInputText formControlName="userName" placeholder="username" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-[var(--surface-700)]">Email *</label>
+      <input pInputText formControlName="email" type="email" placeholder="user@example.com" />
+    </div>
+    @if (!editingId()) {
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[var(--surface-700)]">Password</label>
+        <input pInputText formControlName="password" type="password" placeholder="Password" />
+      </div>
+    }
+    <div class="flex items-center gap-2">
+      <p-checkbox formControlName="isEmailConfirmed" [binary]="true" inputId="confirmed" />
+      <label for="confirmed" class="text-sm text-[var(--surface-700)]">Email confirmed</label>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+    <p-button [label]="editingId() ? 'Update' : 'Create'" (onClick)="save()" [disabled]="form.invalid" />
+  </ng-template>
+</p-dialog>

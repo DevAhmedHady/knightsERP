@@ -1,0 +1,63 @@
+# Copy to config.yaml and adjust. The orchestrator reads config.yaml.
+
+models:
+  # Planner + Reviewer: one model, two modes. Runs through your Claude Code CLI login.
+  planner_reviewer:
+    provider: claude_cli
+    model: opus                   # alias; full id like claude-opus-4-8 also works
+    reasoning_effort: medium      # -> claude --effort medium
+
+  # Senior Full-Stack dev runs through the Codex CLI you're logged into (no API key used).
+  # Complexity routing: complex tasks -> 5.5, lower tasks -> 5.4. Both at medium reasoning.
+  fullstack_dev:
+    provider: codex_cli
+    model_complex: gpt-5.5
+    model_simple: gpt-5.4
+    reasoning_effort: medium
+    sandbox: read-only            # read-only: Codex returns a diff; the controller applies it
+
+  # Senior DB dev — Claude CLI.
+  db_dev:
+    provider: claude_cli
+    model: sonnet
+    reasoning_effort: medium
+
+  # Business / delivery documentation writer — Claude CLI.
+  business_writer:
+    provider: claude_cli
+    model: haiku
+
+# Per-role INPUT token budget per turn. The controller trims context to fit before calling.
+budgets:
+  planner_reviewer: 12000
+  fullstack_dev: 9000
+  db_dev: 9000
+  business_writer: 8000
+  compress_history_over: 6000
+
+# Working rules prepended to every model before it acts (see references/working_rules.md).
+communication:
+  caveman: normal              # off | lite | normal | ultra — compresses inter-model prose
+  caveman_overrides:
+    business_writer: "off"     # delivery docs are client-facing; keep full prose
+  max_reasoning: medium        # hard cap on reasoning effort for every role (anti-overthink)
+
+quality:
+  coverage_threshold: 0.85
+  max_rounds: 6
+  max_revisions_per_task: 3
+
+repo:
+  path: ./
+  test_cmd: "pytest -q"
+  coverage_cmd: "pytest --cov --cov-report=term-missing"
+  coverage_regex: "TOTAL.*?(\\d+)%"
+
+# Markdown artifacts Opus must always persist (paths are relative to the repo).
+docs:
+  plans_dir: docs/plans                 # plan for every run
+  technical_debts_dir: docs/technical-debts   # review results + fixes needed
+  delivery_dir: docs/delivery           # business docs written by Haiku
+
+logging:
+  trace_file: ./orchestrator_trace.jsonl

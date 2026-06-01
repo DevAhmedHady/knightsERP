@@ -7,7 +7,7 @@ using Knights.Domain.Identity;
 
 namespace Knights.Application.Users;
 
-public sealed class UserService(IUserRepository userRepository) : IUserService
+public sealed class UserService(IUserRepository userRepository, IPasswordHasher passwordHasher) : IUserService
 {
     static UserService()
     {
@@ -16,13 +16,17 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<UserResponse> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
+        var passwordHash = string.IsNullOrWhiteSpace(request.Password)
+            ? null
+            : passwordHasher.Hash(request.Password);
+
         var user = User.Create(
             request.FirstName,
             request.MidName,
             request.LastName,
             request.UserName,
             request.Email,
-            request.PasswordHash,
+            passwordHash,
             request.IsEmailConfirmed);
 
         await userRepository.AddAsync(user, cancellationToken);
