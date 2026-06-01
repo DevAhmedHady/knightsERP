@@ -44,7 +44,7 @@ if (builder.Environment.IsDevelopment())
         .WithOrigins("http://localhost:4200")
         .AllowAnyHeader()
         .AllowAnyMethod()));
-}
+}// Need to handle the other environments
 
 builder.Services.AddAuthorization();
 
