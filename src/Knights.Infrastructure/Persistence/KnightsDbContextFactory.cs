@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Knights.Application.Common.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace Knights.Infrastructure.Persistence;
 
@@ -18,6 +20,14 @@ public sealed class KnightsDbContextFactory : IDesignTimeDbContextFactory<Knight
             .UseNpgsql(connectionString)
             .Options;
 
-        return new KnightsDbContext(options);
+        return new KnightsDbContext(
+            options,
+            new SystemAdminTenantContext(),
+            Options.Create(new PersistenceDateTimeOptions()));
+    }
+
+    private sealed class SystemAdminTenantContext : ITenantContext
+    {
+        public Guid? TenantId => null;
     }
 }

@@ -1,11 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Knights.Application.Common.Interfaces;
 using Knights.Domain.Identity;
 using Knights.Domain.Tenants;
+using Knights.Infrastructure.Persistence.Configurations;
+using Microsoft.Extensions.Options;
 
 namespace Knights.Infrastructure.Persistence;
 
-public sealed class KnightsDbContext(DbContextOptions<KnightsDbContext> options) : DbContext(options)
+public sealed class KnightsDbContext(
+    DbContextOptions<KnightsDbContext> options,
+    ITenantContext tenantContext,
+    IOptions<PersistenceDateTimeOptions> dateTimeOptions) : DbContext(options)
 {
+    private readonly ITenantContext _tenantContext = tenantContext;
+    private readonly PersistenceDateTimeOptions _dateTimeOptions = dateTimeOptions.Value;
+
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
@@ -18,7 +27,12 @@ public sealed class KnightsDbContext(DbContextOptions<KnightsDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>().HasQueryFilter(
+            u => _tenantContext.TenantId == null || u.TenantId == _tenantContext.TenantId);
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KnightsDbContext).Assembly);
+        modelBuilder.ApplyDateTimeUtcOffsetConversions(_dateTimeOptions.LoadOffset);
+
         base.OnModelCreating(modelBuilder);
     }
 }
