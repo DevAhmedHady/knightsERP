@@ -2,12 +2,25 @@
   <p-toast />
   <p-confirmDialog />
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
+  <div class="app-hero">
+    <div class="app-hero__copy">
+      <span class="app-hero__eyebrow">Multi-tenant governance</span>
       <h2 class="app-page-title">Tenants</h2>
-      <p class="app-subtitle mt-1">Manage tenants, their roles, permissions, and members</p>
+      <p class="app-subtitle mt-1">Review readiness, ownership, and access posture for each tenant environment.</p>
     </div>
-    <p-button label="New Tenant" icon="pi pi-plus" (onClick)="openCreate()" />
+    <div class="app-hero__metrics">
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Active</span>
+        <strong>{{ activeTenants() }}</strong>
+      </div>
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Complete</span>
+        <strong>{{ unlockedTenants() }}</strong>
+      </div>
+    </div>
+    <div class="sm:ml-auto">
+      <p-button label="New Tenant" icon="pi pi-plus" (onClick)="openCreate()" />
+    </div>
   </div>
 
   <div class="app-panel overflow-x-auto">
@@ -19,20 +32,19 @@
       [rows]="10"
       dataKey="id"
       [globalFilterFields]="['codeName', 'name']"
-      [tableStyle]="{'min-width':'52rem'}"
+      [tableStyle]="{'min-width':'60rem'}"
       styleClass="p-datatable-sm">
       <ng-template pTemplate="caption">
         <div class="app-table-caption">
           <div class="app-table-caption__copy">
             <span class="app-table-caption__kicker">Multi-tenancy</span>
-            <h3 class="app-table-caption__title">Tenants overview</h3>
-            <p class="app-table-caption__subtitle">Each tenant has its own roles, permissions, and members.</p>
+            <h3 class="app-table-caption__title">Tenant command board</h3>
+            <p class="app-table-caption__subtitle">Each workspace carries its own setup state, lifecycle, and access structure.</p>
             <span class="app-count-pill">{{ tenants().length }} tenants</span>
           </div>
           <div class="app-search-field">
             <i class="pi pi-search text-sm"></i>
-            <input pInputText type="text" placeholder="Search tenants..."
-                   class="text-sm" (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+            <input pInputText type="text" placeholder="Search tenants..." class="text-sm" (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
           </div>
         </div>
       </ng-template>
@@ -42,6 +54,7 @@
           <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
           <th>Code Name</th>
           <th>Status</th>
+          <th>Setup</th>
           <th>Expiry</th>
           <th>Roles</th>
           <th style="width:10rem">Actions</th>
@@ -61,13 +74,16 @@
           </td>
           <td class="font-mono text-xs text-[var(--surface-600)]">{{ tenant.codeName }}</td>
           <td>
-            <span class="app-status-pill"
-              [class.app-status-pill-success]="tenant.isActive"
-              [class.app-status-pill-danger]="!tenant.isActive">
+            <span class="app-status-pill" [class.app-status-pill-success]="tenant.isActive" [class.app-status-pill-danger]="!tenant.isActive">
               {{ tenant.isActive ? 'Active' : 'Inactive' }}
             </span>
           </td>
-          <td class="text-sm text-[var(--surface-500)]">{{ tenant.expiryDate ? (tenant.expiryDate | date:'mediumDate') : '—' }}</td>
+          <td>
+            <span class="app-status-pill" [class.app-status-pill-success]="tenant.setupCompletedAt" [class.app-status-pill-warning]="!tenant.setupCompletedAt">
+              {{ tenant.setupCompletedAt ? 'Ready' : 'In progress' }}
+            </span>
+          </td>
+          <td class="text-sm text-[var(--surface-500)]">{{ tenant.expiryDate ? (tenant.expiryDate | date:'mediumDate') : '-' }}</td>
           <td class="text-sm text-[var(--surface-600)]">{{ tenant.roleIds?.length ?? 0 }}</td>
           <td>
             <div class="flex gap-1">
@@ -80,13 +96,12 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="6" class="text-center py-8 text-[var(--surface-500)]">No tenants found.</td></tr>
+        <tr><td colspan="7" class="text-center py-8 text-[var(--surface-500)]">No tenants found.</td></tr>
       </ng-template>
     </p-table>
   </div>
 </div>
 
-<!-- Create / Edit dialog -->
 <p-dialog
   [header]="editingId() ? 'Edit Tenant' : 'New Tenant'"
   [(visible)]="dialogVisible"
@@ -146,7 +161,6 @@
   </ng-template>
 </p-dialog>
 
-<!-- Manage roles + members dialog -->
 <p-dialog
   header="Manage Tenant"
   [(visible)]="manageDialogVisible"
@@ -156,19 +170,39 @@
 
   @if (selectedTenant(); as t) {
     <div class="space-y-5 pt-2">
+      <div class="app-subpanel">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="app-section-kicker">Tenant brief</p>
+            <h4 class="app-section-title">{{ t.name }}</h4>
+            <p class="app-section-subtitle">{{ t.codeName }} · {{ t.isActive ? 'Active' : 'Inactive' }}</p>
+          </div>
+          <span class="app-code-pill">{{ t.roleIds.length }} roles</span>
+        </div>
+      </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-[var(--surface-700)] mb-2">Roles</h4>
-        <div class="flex gap-2 mb-2">
-          <input pInputText [value]="roleIdInput()" (input)="roleIdInput.set($any($event.target).value)"
-                 placeholder="Role GUID" class="flex-1 text-sm" />
+        <p class="app-section-kicker">Roles</p>
+        <h4 class="app-section-title mb-3">Assigned roles</h4>
+        <div class="flex gap-2 mb-3">
+          <p-select
+            [ngModel]="roleIdInput()"
+            (ngModelChange)="roleIdInput.set($event)"
+            [options]="availableRoleOptions()"
+            optionValue="value"
+            optionLabel="label"
+            [filter]="true"
+            placeholder="Select role to assign"
+            styleClass="flex-1 text-sm" />
           <p-button label="Assign" size="small" (onClick)="assignRole()" [disabled]="!roleIdInput().trim()" />
         </div>
         <div class="flex flex-wrap gap-1.5">
           @for (rId of t.roleIds; track rId) {
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--surface-100)] px-2.5 py-0.5 text-xs font-mono">
-              {{ rId | slice:0:8 }}…
-              <button class="ml-1 text-[var(--danger-500)] hover:text-[var(--danger-700)]" (click)="removeRole(rId)">×</button>
+            <span class="app-status-pill app-status-pill-primary inline-flex items-center gap-2">
+              {{ getRoleName(rId) }}
+              <button class="text-[var(--primary-700)] hover:text-[var(--danger-700)] transition-colors" (click)="removeRole(rId)">
+                <i class="pi pi-times text-[10px]"></i>
+              </button>
             </span>
           }
           @if (!t.roleIds.length) {
@@ -178,7 +212,8 @@
       </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-[var(--surface-700)] mb-2">Add Member</h4>
+        <p class="app-section-kicker">Members</p>
+        <h4 class="app-section-title mb-3">Add member</h4>
         <form [formGroup]="memberForm" class="flex gap-2">
           <p-select
             formControlName="userId"
@@ -204,7 +239,6 @@
           <p-button label="Add" size="small" (onClick)="addMember()" [disabled]="memberForm.invalid" />
         </form>
       </div>
-
     </div>
   }
 

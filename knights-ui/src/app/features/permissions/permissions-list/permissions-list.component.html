@@ -2,12 +2,21 @@
   <p-toast />
   <p-confirmDialog />
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
+  <div class="app-hero">
+    <div class="app-hero__copy">
+      <span class="app-hero__eyebrow">Capability map</span>
       <h2 class="app-page-title">Permissions</h2>
-      <p class="app-subtitle mt-1">Manage system permissions</p>
+      <p class="app-subtitle mt-1">Track and manage system-level capability grants across all roles.</p>
     </div>
-    <p-button label="New Permission" icon="pi pi-plus" (onClick)="openCreate()" />
+    <div class="app-hero__metrics">
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Total</span>
+        <strong>{{ permissions().length }}</strong>
+      </div>
+    </div>
+    <div class="sm:ml-auto">
+      <p-button label="New Permission" icon="pi pi-plus" (onClick)="openCreate()" />
+    </div>
   </div>
 
   <div class="app-panel overflow-x-auto">
@@ -41,7 +50,6 @@
         <tr>
           <th pSortableColumn="codeName">Code Name <p-sortIcon field="codeName" /></th>
           <th pSortableColumn="displayName">Display Name <p-sortIcon field="displayName" /></th>
-          <th>Description</th>
           <th style="width:8rem">Actions</th>
         </tr>
       </ng-template>
@@ -56,11 +64,10 @@
               <span class="app-entity__avatar"><i class="pi pi-key text-sm"></i></span>
               <div class="min-w-0">
                 <span class="app-entity__name">{{ perm.displayName }}</span>
-                <span class="app-entity__meta">{{ perm.description || 'No description provided' }}</span>
+                <span class="app-entity__meta">{{ perm.description || 'No description' }}</span>
               </div>
             </div>
           </td>
-          <td class="text-[var(--surface-500)] text-sm">{{ perm.description || '-' }}</td>
           <td>
             <div class="flex gap-2">
               <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(perm)" />
@@ -71,7 +78,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="4" class="text-center py-8 text-[var(--surface-500)]">No permissions found.</td></tr>
+        <tr><td colspan="3" class="text-center py-8 text-[var(--surface-500)]">No permissions found.</td></tr>
       </ng-template>
     </p-table>
   </div>

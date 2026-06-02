@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -20,12 +20,24 @@ export class DashboardComponent implements OnInit {
   totalRoles = signal(0);
   activeRoles = signal(0);
   totalPermissions = signal(0);
+  coverageScore = computed(() => {
+    const total = this.totalRoles() + this.totalPermissions();
+    if (total === 0) {
+      return 0;
+    }
+
+    return Math.round(((this.activeRoles() * 2) + this.totalPermissions()) / (total * 2) * 100);
+  });
+  inactiveRoles = computed(() => Math.max(0, this.totalRoles() - this.activeRoles()));
 
   chartData = signal<any>(null);
   chartOptions = signal<any>({
     responsive: true,
+    maintainAspectRatio: true,
+    cutout: '72%',
     plugins: {
-      legend: { position: 'bottom' }
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx: any) => ` ${ctx.parsed} roles` } }
     }
   });
 
@@ -39,15 +51,15 @@ export class DashboardComponent implements OnInit {
         this.activeRoles.set(roles.filter(r => r.isActive).length);
         this.totalPermissions.set(permissions.length);
 
+        const active = roles.filter(r => r.isActive).length;
+        const inactive = roles.length - active;
         this.chartData.set({
-          labels: permissions.slice(0, 8).map(p => p.codeName),
+          labels: ['Active', 'Inactive'],
           datasets: [{
-            label: 'Permissions',
-            data: permissions.slice(0, 8).map(() => Math.floor(Math.random() * 10) + 1),
-            backgroundColor: [
-              '#0d67b2', '#138a61', '#d97706', '#c2410c',
-              '#334155', '#1683d8', '#0d6f50', '#a16207'
-            ]
+            data: [active, inactive],
+            backgroundColor: ['#0f7d5c', '#d97706'],
+            hoverBackgroundColor: ['#138a61', '#b45309'],
+            borderWidth: 0
           }]
         });
         this.loading.set(false);

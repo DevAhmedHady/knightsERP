@@ -1,43 +1,60 @@
 <p-toast></p-toast>
 
 @if (loading()) {
-  <div class="p-6 text-sm text-surface-500">Loading setup...</div>
+  <div class="p-6 text-sm text-[var(--surface-500)]">Loading setup...</div>
 } @else if (summary(); as setup) {
-  <div class="space-y-6 p-4 lg:p-6">
-    <section class="grid gap-4 lg:grid-cols-[1.4fr,0.8fr]">
-      <div class="rounded-lg border border-surface-200 bg-white p-5 shadow-sm">
-        <div class="mb-4 flex items-start justify-between gap-4">
+  <div class="space-y-6">
+    <div class="app-hero">
+      <div class="app-hero__copy">
+        <span class="app-hero__eyebrow">Tenant builder</span>
+        <h2 class="app-page-title">{{ setup.tenantName }}</h2>
+        <p class="app-subtitle">Shape the environment, activate features, and unlock the workspace once the foundation is in place.</p>
+      </div>
+      <div class="app-hero__metrics">
+        <div class="app-hero__metric">
+          <span class="app-hero__metric-label">Progress</span>
+          <strong>{{ setup.progressPercent }}%</strong>
+        </div>
+        <div class="app-hero__metric">
+          <span class="app-hero__metric-label">Checklist</span>
+          <strong>{{ completedSteps() }}/{{ setup.steps.length }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <section class="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+      <div class="app-panel p-5 sm:p-6">
+        <div class="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">Tenant setup</p>
-            <h1 class="text-2xl font-semibold text-surface-900">{{ setup.tenantName }}</h1>
-            <p class="mt-1 text-sm text-surface-600">Build environment metadata, pick platform features, unlock workspace at 50%.</p>
+            <p class="app-section-kicker">Environment profile</p>
+            <h3 class="app-section-title">World identity</h3>
+            <p class="app-section-subtitle">Define the workspace name, visual key, and the world rules your tenant operates inside.</p>
           </div>
-          <div class="min-w-28 rounded-lg border border-surface-200 px-4 py-3 text-center">
-            <div class="text-2xl font-semibold text-surface-900">{{ setup.progressPercent }}%</div>
-            <div class="text-xs text-surface-500">{{ setup.isUnlocked ? 'Core unlocked' : 'Setup required' }}</div>
-          </div>
+          <span class="app-status-pill" [class.app-status-pill-success]="setup.isUnlocked" [class.app-status-pill-warning]="!setup.isUnlocked">
+            {{ setup.isUnlocked ? 'Core unlocked' : 'Setup required' }}
+          </span>
         </div>
 
-        <div class="mb-5 h-2 overflow-hidden rounded-full bg-surface-100">
-          <div class="h-full bg-emerald-500 transition-all duration-300" [style.width.%]="setup.progressPercent"></div>
+        <div class="mb-5">
+          <div class="app-progress">
+            <div class="app-progress__bar" [style.width.%]="setup.progressPercent"></div>
+          </div>
         </div>
 
         <form [formGroup]="form" class="grid gap-4" (ngSubmit)="saveEnvironment()">
           <label class="grid gap-1.5 text-sm">
-            <span class="font-medium text-surface-700">Environment name</span>
-            <input pInputText formControlName="environmentDisplayName" />
+            <span class="font-medium text-[var(--surface-700)]">Environment name</span>
+            <input pInputText formControlName="environmentDisplayName" placeholder="Northwatch Frontier" />
           </label>
 
           <label class="grid gap-1.5 text-sm">
-            <span class="font-medium text-surface-700">Theme key</span>
-            <input pInputText formControlName="themeKey" />
+            <span class="font-medium text-[var(--surface-700)]">Theme key</span>
+            <input pInputText formControlName="themeKey" placeholder="midnight-ops" />
           </label>
 
           <label class="grid gap-1.5 text-sm">
-            <span class="font-medium text-surface-700">World description</span>
-            <textarea
-              class="min-h-32 rounded-md border border-surface-300 px-3 py-2 text-sm outline-none transition focus:border-primary"
-              formControlName="worldDescription"></textarea>
+            <span class="font-medium text-[var(--surface-700)]">World description</span>
+            <textarea class="p-inputtextarea" formControlName="worldDescription" placeholder="Describe the environment, tone, and operating model."></textarea>
           </label>
 
           <div class="flex justify-end">
@@ -46,44 +63,61 @@
         </form>
       </div>
 
-      <div class="rounded-lg border border-surface-200 bg-white p-5 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">Checklist</p>
-        <div class="mt-4 space-y-3">
-          @for (step of setup.steps; track step.code) {
-            <div class="flex items-center justify-between rounded-lg border border-surface-200 px-3 py-2">
-              <div>
-                <div class="text-sm font-medium text-surface-900">{{ step.title }}</div>
-                <div class="text-xs text-surface-500">{{ step.code }}</div>
+      <div class="space-y-4">
+        <div class="app-panel p-5">
+          <p class="app-section-kicker">Checklist</p>
+          <h3 class="app-section-title">Completion gates</h3>
+          <div class="mt-4 space-y-3">
+            @for (step of setup.steps; track step.code) {
+              <div class="app-check-row">
+                <div>
+                  <div class="app-check-row__title">{{ step.title }}</div>
+                  <div class="app-check-row__meta">{{ step.code }}</div>
+                </div>
+                <span class="app-status-pill" [class.app-status-pill-success]="step.isCompleted" [class.app-status-pill-warning]="!step.isCompleted">
+                  {{ step.isCompleted ? 'Done' : 'Pending' }}
+                </span>
               </div>
-              <span class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                    [class.bg-emerald-100]="step.isCompleted"
-                    [class.text-emerald-700]="step.isCompleted"
-                    [class.bg-amber-100]="!step.isCompleted"
-                    [class.text-amber-700]="!step.isCompleted">
-                {{ step.isCompleted ? 'Done' : 'Pending' }}
-              </span>
+            }
+          </div>
+        </div>
+
+        <div class="app-panel p-5">
+          <p class="app-section-kicker">Feature mix</p>
+          <h3 class="app-section-title">Selection profile</h3>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="app-mini-stat">
+              <span class="app-mini-stat__label">Core</span>
+              <strong>{{ coreFeatureCount() }}</strong>
             </div>
-          }
+            <div class="app-mini-stat">
+              <span class="app-mini-stat__label">Optional</span>
+              <strong>{{ optionalFeatureCount() }}</strong>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="rounded-lg border border-surface-200 bg-white p-5 shadow-sm">
+    <section class="app-panel p-5 sm:p-6">
       <div class="mb-4 flex items-center justify-between gap-4">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">Feature picker</p>
-          <h2 class="text-lg font-semibold text-surface-900">Published features</h2>
+          <p class="app-section-kicker">Feature picker</p>
+          <h3 class="app-section-title">Published features</h3>
         </div>
-        <span class="text-sm text-surface-500">{{ setup.selectedFeatures.length }} selected</span>
+        <span class="app-count-pill">{{ setup.selectedFeatures.length }} selected</span>
       </div>
 
-      <div class="grid gap-3 lg:grid-cols-2">
+      <div class="grid gap-3 xl:grid-cols-2">
         @for (feature of setup.availableFeatures; track feature.id) {
-          <div class="rounded-lg border border-surface-200 p-4">
+          <div class="app-selection-card">
             <div class="flex items-start justify-between gap-3">
-              <div>
-                <h3 class="font-medium text-surface-900">{{ feature.name }}</h3>
-                <p class="text-xs uppercase tracking-wide text-surface-500">{{ feature.key }} · {{ feature.category }}</p>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="app-selection-card__icon"><i [class]="feature.iconKey"></i></span>
+                  <h4 class="app-selection-card__title">{{ feature.name }}</h4>
+                </div>
+                <p class="app-selection-card__meta">{{ feature.key }} · {{ feature.category }}</p>
               </div>
               <button
                 pButton
@@ -93,13 +127,63 @@
                 [label]="selectedFeatureIds().has(feature.id) ? 'Remove' : 'Add'"
                 (click)="toggleFeature(feature)"></button>
             </div>
-            <p class="mt-3 text-sm text-surface-600">{{ feature.description }}</p>
+            <p class="mt-3 text-sm text-[var(--surface-600)]">{{ feature.description }}</p>
+            <div class="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--surface-500)]">
+              <span class="app-code-pill">{{ feature.isCore ? 'Core' : 'Optional' }}</span>
+              <span class="app-code-pill">Weight {{ feature.setupWeight }}%</span>
+              @for (tag of feature.tags; track tag) {
+                <span class="app-code-pill">{{ tag }}</span>
+              }
+            </div>
             @if (feature.dependencyKeys.length) {
-              <p class="mt-3 text-xs text-surface-500">Needs: {{ feature.dependencyKeys.join(', ') }}</p>
+              <p class="mt-3 text-xs text-[var(--surface-500)]">Needs: {{ feature.dependencyKeys.join(', ') }}</p>
             }
           </div>
         }
       </div>
     </section>
+
+    @if (setup.selectedFeatures.length) {
+      <section class="app-panel p-5 sm:p-6">
+        <div class="mb-4">
+          <p class="app-section-kicker">Feature settings</p>
+          <h3 class="app-section-title">Dynamic configuration</h3>
+        </div>
+
+        <div class="space-y-4">
+          @for (feature of setup.selectedFeatures; track feature.id) {
+            <div class="app-subpanel">
+              <div class="mb-3 flex items-center gap-2">
+                <span class="app-selection-card__icon"><i [class]="feature.iconKey"></i></span>
+                <div>
+                  <h4 class="app-selection-card__title">{{ feature.name }}</h4>
+                  <p class="app-selection-card__meta">{{ feature.key }}</p>
+                </div>
+              </div>
+
+              @if (featureSettingsKeys(feature).length) {
+                <form class="grid gap-3 md:grid-cols-2" [formGroup]="featureSettingsForms()[feature.id]">
+                  @for (key of featureSettingsKeys(feature); track key) {
+                    <label class="grid gap-1 text-sm">
+                      <span class="font-medium text-[var(--surface-700)]">{{ key }}</span>
+                      @if (featureSettingType(feature, key) === 'boolean') {
+                        <p-checkbox [formControl]="featureSettingsControl(feature.id, key)" [binary]="true" />
+                      } @else {
+                        <input pInputText [type]="featureSettingType(feature, key) === 'number' ? 'number' : 'text'" [formControl]="featureSettingsControl(feature.id, key)" />
+                      }
+                    </label>
+                  }
+                </form>
+                <div class="mt-3 flex justify-end">
+                  <button pButton type="button" size="small" label="Save settings" (click)="saveFeatureSettings(feature)"></button>
+                </div>
+              } @else {
+                <p class="text-sm text-[var(--surface-500)]">No dynamic settings for this feature.</p>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
   </div>
 }

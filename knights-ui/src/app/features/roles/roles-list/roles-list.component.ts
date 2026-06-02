@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -38,6 +38,8 @@ export class RolesListComponent implements OnInit {
   editingId = signal<string | null>(null);
   selectedRole = signal<RoleWithPermissionsResponse | null>(null);
   selectedPermIds = signal<Set<string>>(new Set());
+  activeRoles = computed(() => this.roles().filter(r => r.isActive).length);
+  staticRoles = computed(() => this.roles().filter(r => r.isStatic).length);
 
   form = this.fb.group({
     name: ['', Validators.required],

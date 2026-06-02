@@ -19,6 +19,7 @@
           <th>Key</th>
           <th>Name</th>
           <th>Category</th>
+          <th>Profile</th>
           <th>Dependencies</th>
           <th>Status</th>
           <th></th>
@@ -27,8 +28,17 @@
       <ng-template pTemplate="body" let-item>
         <tr>
           <td>{{ item.key }}</td>
-          <td>{{ item.name }}</td>
+          <td>
+            <div class="flex items-center gap-2">
+              <i [class]="item.iconKey"></i>
+              <div>
+                <div>{{ item.name }}</div>
+                <div class="text-xs text-surface-500">{{ item.tags.join(', ') || 'No tags' }}</div>
+              </div>
+            </div>
+          </td>
           <td>{{ item.category }}</td>
+          <td>{{ item.isCore ? 'Core' : 'Optional' }} · {{ item.setupWeight }}%</td>
           <td>{{ item.dependencyKeys.join(', ') || 'None' }}</td>
           <td>{{ item.isRetired ? 'Retired' : item.isPublished ? 'Published' : 'Draft' }}</td>
           <td class="text-right">
@@ -53,12 +63,36 @@
           <input pInputText formControlName="category" />
         </label>
         <label class="grid gap-1 text-sm">
+          <span>Icon key</span>
+          <input pInputText formControlName="iconKey" />
+        </label>
+        <label class="grid gap-1 text-sm">
+          <span>Tags</span>
+          <input pInputText formControlName="tags" />
+        </label>
+        <label class="grid gap-1 text-sm">
           <span>Description</span>
           <textarea class="min-h-28 rounded-md border border-surface-300 px-3 py-2 text-sm" formControlName="description"></textarea>
         </label>
         <label class="grid gap-1 text-sm">
           <span>Dependencies</span>
           <input pInputText formControlName="dependencyKeys" />
+        </label>
+        <label class="grid gap-1 text-sm">
+          <span>Settings schema JSON</span>
+          <textarea class="min-h-28 rounded-md border border-surface-300 px-3 py-2 text-sm font-mono" formControlName="settingsSchemaJson"></textarea>
+        </label>
+        <label class="grid gap-1 text-sm">
+          <span>Default settings JSON</span>
+          <textarea class="min-h-28 rounded-md border border-surface-300 px-3 py-2 text-sm font-mono" formControlName="defaultSettingsJson"></textarea>
+        </label>
+        <label class="grid gap-1 text-sm">
+          <span>Setup weight</span>
+          <input pInputText type="number" formControlName="setupWeight" />
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" formControlName="isCore" />
+          <span>Core feature</span>
         </label>
         <label class="grid gap-1 text-sm">
           <span>Display order</span>

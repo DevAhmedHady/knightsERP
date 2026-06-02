@@ -35,7 +35,13 @@ export interface FeatureCatalogItemResponse {
   name: string;
   description: string;
   category: string;
+  iconKey: string;
+  tags: string[];
   dependencyKeys: string[];
+  settingsSchemaJson: string;
+  defaultSettingsJson: string;
+  setupWeight: number;
+  isCore: boolean;
   displayOrder: number;
   isPublished: boolean;
   isRetired: boolean;
@@ -59,7 +65,11 @@ export interface TenantSetupSummaryResponse {
   isComplete: boolean;
   steps: TenantSetupStepResponse[];
   availableFeatures: FeatureCatalogItemResponse[];
-  selectedFeatures: FeatureCatalogItemResponse[];
+  selectedFeatures: TenantSelectedFeatureResponse[];
+}
+
+export interface TenantSelectedFeatureResponse extends FeatureCatalogItemResponse {
+  settingsJson: string;
 }
 
 export interface ConfigureTenantEnvironmentRequest {
@@ -73,7 +83,13 @@ export interface CreateFeatureCatalogItemRequest {
   name: string;
   description: string;
   category: string;
+  iconKey: string;
+  tags: string[];
   dependencyKeys: string[];
+  settingsSchemaJson: string;
+  defaultSettingsJson: string;
+  setupWeight: number;
+  isCore: boolean;
   displayOrder: number;
   isPublished: boolean;
 }
@@ -82,8 +98,18 @@ export interface UpdateFeatureCatalogItemRequest {
   name: string;
   description: string;
   category: string;
+  iconKey: string;
+  tags: string[];
   dependencyKeys: string[];
+  settingsSchemaJson: string;
+  defaultSettingsJson: string;
+  setupWeight: number;
+  isCore: boolean;
   displayOrder: number;
   isPublished: boolean;
   isRetired: boolean;
+}
+
+export interface UpdateTenantFeatureSettingsRequest {
+  settingsJson: string;
 }

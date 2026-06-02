@@ -34,7 +34,13 @@ export class FeatureCatalogComponent implements OnInit {
     name: ['', Validators.required],
     description: ['', Validators.required],
     category: ['', Validators.required],
+    iconKey: ['pi pi-box', Validators.required],
+    tags: [''],
     dependencyKeys: [''],
+    settingsSchemaJson: ['{}', Validators.required],
+    defaultSettingsJson: ['{}', Validators.required],
+    setupWeight: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
+    isCore: [false],
     displayOrder: [0, Validators.required],
     isPublished: [true],
     isRetired: [false]
@@ -64,7 +70,22 @@ export class FeatureCatalogComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ key: '', name: '', description: '', category: '', dependencyKeys: '', displayOrder: 0, isPublished: true, isRetired: false });
+    this.form.reset({
+      key: '',
+      name: '',
+      description: '',
+      category: '',
+      iconKey: 'pi pi-box',
+      tags: '',
+      dependencyKeys: '',
+      settingsSchemaJson: '{}',
+      defaultSettingsJson: '{}',
+      setupWeight: 10,
+      isCore: false,
+      displayOrder: 0,
+      isPublished: true,
+      isRetired: false
+    });
     this.form.controls.key.enable();
     this.dialogVisible.set(true);
   }
@@ -76,7 +97,13 @@ export class FeatureCatalogComponent implements OnInit {
       name: item.name,
       description: item.description,
       category: item.category,
+      iconKey: item.iconKey,
+      tags: item.tags.join(', '),
       dependencyKeys: item.dependencyKeys.join(', '),
+      settingsSchemaJson: item.settingsSchemaJson,
+      defaultSettingsJson: item.defaultSettingsJson,
+      setupWeight: item.setupWeight,
+      isCore: item.isCore,
       displayOrder: item.displayOrder,
       isPublished: item.isPublished,
       isRetired: item.isRetired
@@ -96,13 +123,23 @@ export class FeatureCatalogComponent implements OnInit {
       .split(',')
       .map(value => value.trim())
       .filter(Boolean);
+    const tags = (raw.tags ?? '')
+      .split(',')
+      .map(value => value.trim())
+      .filter(Boolean);
 
     const request = this.editing()
       ? this.tenantService.updateFeatureCatalogItem(this.editing()!.id, {
           name: raw.name!,
           description: raw.description!,
           category: raw.category!,
+          iconKey: raw.iconKey!,
+          tags,
           dependencyKeys,
+          settingsSchemaJson: raw.settingsSchemaJson!,
+          defaultSettingsJson: raw.defaultSettingsJson!,
+          setupWeight: Number(raw.setupWeight ?? 0),
+          isCore: !!raw.isCore,
           displayOrder: Number(raw.displayOrder ?? 0),
           isPublished: !!raw.isPublished,
           isRetired: !!raw.isRetired
@@ -112,7 +149,13 @@ export class FeatureCatalogComponent implements OnInit {
           name: raw.name!,
           description: raw.description!,
           category: raw.category!,
+          iconKey: raw.iconKey!,
+          tags,
           dependencyKeys,
+          settingsSchemaJson: raw.settingsSchemaJson!,
+          defaultSettingsJson: raw.defaultSettingsJson!,
+          setupWeight: Number(raw.setupWeight ?? 0),
+          isCore: !!raw.isCore,
           displayOrder: Number(raw.displayOrder ?? 0),
           isPublished: !!raw.isPublished
         });

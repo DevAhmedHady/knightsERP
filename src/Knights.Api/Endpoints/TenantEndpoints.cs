@@ -11,6 +11,7 @@ public static class TenantEndpoints
             .WithTags("Tenants");
 
         group.MapPost("", CreateAsync).WithName("CreateTenant");
+        group.MapGet("", GetAllAsync).WithName("GetAllTenants");
         group.MapGet("/{id:guid}", GetByIdAsync).WithName("GetTenantById");
         group.MapGet("/code/{codeName}", GetByCodeNameAsync).WithName("GetTenantByCodeName");
         group.MapPut("/{id:guid}", UpdateAsync).WithName("UpdateTenant");
@@ -24,6 +25,7 @@ public static class TenantEndpoints
         group.MapPut("/current/environment", ConfigureCurrentEnvironmentAsync).WithName("ConfigureCurrentTenantEnvironment");
         group.MapPost("/current/features/{featureId:guid}", SelectCurrentFeatureAsync).WithName("SelectCurrentTenantFeature");
         group.MapDelete("/current/features/{featureId:guid}", RemoveCurrentFeatureAsync).WithName("RemoveCurrentTenantFeature");
+        group.MapPut("/current/features/{featureId:guid}/settings", UpdateCurrentFeatureSettingsAsync).WithName("UpdateCurrentTenantFeatureSettings");
         group.MapGet("/features/catalog", GetFeatureCatalogAsync).WithName("GetFeatureCatalog");
         group.MapPost("/features/catalog", CreateFeatureCatalogAsync).WithName("CreateFeatureCatalogItem");
         group.MapPut("/features/catalog/{featureId:guid}", UpdateFeatureCatalogAsync).WithName("UpdateFeatureCatalogItem");
@@ -38,6 +40,14 @@ public static class TenantEndpoints
     {
         var tenant = await tenantService.CreateAsync(request, cancellationToken);
         return Results.Created($"/api/tenants/{tenant.Id}", tenant);
+    }
+
+    private static async Task<IResult> GetAllAsync(
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        var tenants = await tenantService.GetAllAsync(cancellationToken);
+        return Results.Ok(tenants);
     }
 
     private static async Task<IResult> GetByIdAsync(
@@ -232,6 +242,23 @@ public static class TenantEndpoints
         try
         {
             var summary = await tenantService.RemoveCurrentFeatureAsync(featureId, cancellationToken);
+            return Results.Ok(summary);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> UpdateCurrentFeatureSettingsAsync(
+        Guid featureId,
+        UpdateTenantFeatureSettingsRequest request,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await tenantService.UpdateCurrentFeatureSettingsAsync(featureId, request, cancellationToken);
             return Results.Ok(summary);
         }
         catch (InvalidOperationException exception)

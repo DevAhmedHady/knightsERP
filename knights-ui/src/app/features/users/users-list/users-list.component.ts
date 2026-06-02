@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -34,6 +34,8 @@ export class UsersListComponent implements OnInit {
   dialogVisible = signal(false);
   editingId = signal<string | null>(null);
   searchValue = '';
+  confirmedUsers = computed(() => this.users().filter(user => user.isEmailConfirmed).length);
+  unassignedUsers = computed(() => this.users().filter(user => !user.tenantId).length);
 
   form = this.fb.group({
     firstName: ['', Validators.required],

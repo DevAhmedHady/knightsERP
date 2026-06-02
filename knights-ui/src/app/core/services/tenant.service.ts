@@ -18,6 +18,10 @@ export class TenantService {
   private http = inject(HttpClient);
   private base = `${environment.apiBaseUrl}/api/tenants`;
 
+  getAll(): Observable<TenantResponse[]> {
+    return this.http.get<TenantResponse[]>(this.base);
+  }
+
   getById(id: string): Observable<TenantResponse> {
     return this.http.get<TenantResponse>(`${this.base}/${id}`);
   }
@@ -72,6 +76,10 @@ export class TenantService {
 
   removeCurrentFeature(featureId: string): Observable<TenantSetupSummaryResponse> {
     return this.http.delete<TenantSetupSummaryResponse>(`${this.base}/current/features/${featureId}`);
+  }
+
+  updateCurrentFeatureSettings(featureId: string, settingsJson: string): Observable<TenantSetupSummaryResponse> {
+    return this.http.put<TenantSetupSummaryResponse>(`${this.base}/current/features/${featureId}/settings`, { settingsJson });
   }
 
   getFeatureCatalog(): Observable<FeatureCatalogItemResponse[]> {

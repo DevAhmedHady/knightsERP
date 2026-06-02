@@ -1,6 +1,6 @@
 namespace Knights.Application.Tenants.Responses;
 
-public sealed record FeatureCatalogItemResponse(
+public sealed record TenantSelectedFeatureResponse(
     Guid Id,
     string Key,
     string Name,
@@ -11,6 +11,7 @@ public sealed record FeatureCatalogItemResponse(
     IReadOnlyCollection<string> DependencyKeys,
     string SettingsSchemaJson,
     string DefaultSettingsJson,
+    string SettingsJson,
     int SetupWeight,
     bool IsCore,
     int DisplayOrder,

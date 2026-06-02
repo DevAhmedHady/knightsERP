@@ -1,55 +1,136 @@
 <div class="space-y-6">
-  <div class="flex flex-col gap-1">
-    <h2 class="app-page-title">Dashboard</h2>
-    <p class="app-subtitle">Operational snapshot for access management</p>
+  <div class="app-hero">
+    <div class="app-hero__copy">
+      <span class="app-hero__eyebrow">Operations overview</span>
+      <h2 class="app-page-title">Access command center</h2>
+      <p class="app-subtitle">Track roles, permissions, and control readiness from one quiet operational surface.</p>
+    </div>
+    <div class="app-hero__metrics">
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Coverage</span>
+        <strong>{{ coverageScore() }}%</strong>
+      </div>
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Inactive roles</span>
+        <strong>{{ inactiveRoles() }}</strong>
+      </div>
+    </div>
   </div>
 
   @if (loading()) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       @for (i of [1,2,3]; track i) {
-        <p-skeleton height="6rem" borderRadius="0.5rem" />
+        <p-skeleton height="7.5rem" borderRadius="1.5rem" />
       }
     </div>
+    <div class="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <p-skeleton height="14rem" borderRadius="1.5rem" />
+      <p-skeleton height="14rem" borderRadius="1.5rem" />
+    </div>
   } @else {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-      <div class="app-card p-5 flex items-center gap-4">
-        <div class="w-11 h-11 rounded-lg bg-[var(--primary-50)] flex items-center justify-center border border-[var(--primary-100)]">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="app-card app-metric-card p-5">
+        <div class="app-metric-card__icon bg-[var(--primary-50)] border border-[var(--primary-100)]">
           <i class="pi pi-shield text-[var(--primary-600)] text-xl"></i>
         </div>
         <div>
-          <p class="text-sm font-medium text-[var(--surface-500)]">Total Roles</p>
-          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ totalRoles() }}</p>
+          <p class="app-metric-card__label">Total Roles</p>
+          <p class="app-metric-card__value">{{ totalRoles() }}</p>
+          <p class="app-metric-card__meta">Across tenant and system scope</p>
         </div>
       </div>
 
-      <div class="app-card p-5 flex items-center gap-4">
-        <div class="w-11 h-11 rounded-lg bg-[var(--accent-100)] flex items-center justify-center border border-[#b9ecd7]">
+      <div class="app-card app-metric-card p-5">
+        <div class="app-metric-card__icon bg-[var(--accent-100)] border border-[#b9ecd7]">
           <i class="pi pi-check-circle text-[var(--accent-700)] text-xl"></i>
         </div>
         <div>
-          <p class="text-sm font-medium text-[var(--surface-500)]">Active Roles</p>
-          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ activeRoles() }}</p>
+          <p class="app-metric-card__label">Active Roles</p>
+          <p class="app-metric-card__value">{{ activeRoles() }}</p>
+          <p class="app-metric-card__meta">Policies available for assignment</p>
         </div>
       </div>
 
-      <div class="app-card p-5 flex items-center gap-4">
-        <div class="w-11 h-11 rounded-lg bg-[var(--warning-100)] flex items-center justify-center border border-[#f4d977]">
+      <div class="app-card app-metric-card p-5">
+        <div class="app-metric-card__icon bg-[var(--warning-100)] border border-[#f4d977]">
           <i class="pi pi-lock text-[var(--warning-700)] text-xl"></i>
         </div>
         <div>
-          <p class="text-sm font-medium text-[var(--surface-500)]">Total Permissions</p>
-          <p class="text-2xl font-bold text-[var(--surface-900)]">{{ totalPermissions() }}</p>
+          <p class="app-metric-card__label">Permissions</p>
+          <p class="app-metric-card__value">{{ totalPermissions() }}</p>
+          <p class="app-metric-card__meta">Capabilities available for composition</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <div class="app-panel p-5 sm:p-6">
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <p class="app-section-kicker">Health readout</p>
+            <h3 class="app-section-title">Control posture</h3>
+            <p class="app-section-subtitle">Snapshot for security and tenant administrators.</p>
+          </div>
+          <span class="app-status-pill app-status-pill-success">Stable</span>
+        </div>
+        <div class="app-progress mb-1">
+          <div class="app-progress__bar" [style.width.%]="coverageScore()"></div>
+        </div>
+        <p class="text-xs text-[var(--surface-400)] mb-5">{{ coverageScore() }}% coverage score</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="app-mini-stat">
+            <span class="app-mini-stat__label">Role activity</span>
+            <strong>{{ activeRoles() }}/{{ totalRoles() }}</strong>
+          </div>
+          <div class="app-mini-stat">
+            <span class="app-mini-stat__label">Permissions</span>
+            <strong>{{ totalPermissions() }}</strong>
+          </div>
+          <div class="app-mini-stat">
+            <span class="app-mini-stat__label">Inactive roles</span>
+            <strong>{{ inactiveRoles() }}</strong>
+          </div>
+          <div class="app-mini-stat">
+            <span class="app-mini-stat__label">Review model</span>
+            <strong>Least privilege</strong>
+          </div>
         </div>
       </div>
 
+      @if (chartData()) {
+        <div class="app-panel p-5 sm:p-6">
+          <div class="mb-5">
+            <p class="app-section-kicker">Breakdown</p>
+            <h3 class="app-section-title">Role distribution</h3>
+            <p class="app-section-subtitle">Active vs inactive across the full catalog.</p>
+          </div>
+          <div class="flex items-center gap-8">
+            <div class="relative shrink-0" style="width:9rem;height:9rem">
+              <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions()" styleClass="w-full h-full" />
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-2xl font-bold text-[var(--surface-900)]" style="font-family:'Sora',sans-serif">{{ totalRoles() }}</span>
+                <span class="text-xs text-[var(--surface-400)]">total</span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-3 min-w-0">
+              <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full shrink-0" style="background:#0f7d5c"></span>
+                <div>
+                  <p class="text-sm font-semibold text-[var(--surface-900)]">{{ activeRoles() }} Active</p>
+                  <p class="text-xs text-[var(--surface-500)]">In use for assignments</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full shrink-0" style="background:#d97706"></span>
+                <div>
+                  <p class="text-sm font-semibold text-[var(--surface-900)]">{{ inactiveRoles() }} Inactive</p>
+                  <p class="text-xs text-[var(--surface-500)]">Disabled or retired</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
-
-    @if (chartData()) {
-      <div class="app-panel p-5 sm:p-6">
-        <h3 class="text-base font-bold text-[var(--surface-900)] mb-4">Permission Distribution</h3>
-        <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions()" styleClass="max-h-64" />
-      </div>
-    }
   }
 </div>

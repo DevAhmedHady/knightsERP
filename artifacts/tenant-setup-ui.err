@@ -1,0 +1,265 @@
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/feature-catalog/feature-catalog.component.html:83:2:
+[37m      83 │   [32m</div>[37m
+         ╵   [32m~~~~~~[0m
+
+  Error occurs in the template of component FeatureCatalogComponent.
+
+    src/app/features/tenants/feature-catalog/feature-catalog.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./feature-catalog.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '{ name: string; description: string; category: string; dependencyKeys: string[]; displayOrder: number; isPublished: boolean; isRetired: boolean; }' is not assignable to parameter of type 'UpdateFeatureCatalogItemRequest'.
+  Type '{ name: string; description: string; category: string; dependencyKeys: string[]; displayOrder: number; isPublished: boolean; isRetired: boolean; }' is missing the following properties from type 'UpdateFeatureCatalogItemRequest': iconKey, tags, settingsSchemaJson, defaultSettingsJson, and 2 more.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/feature-catalog/feature-catalog.component.ts:101:72:
+[37m      101 │ ...this.tenantService.updateFeatureCatalogItem(this.editing()!.id, [32m{[37m
+          ╵                                                                    [32m^[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '{ key: string; name: string; description: string; category: string; dependencyKeys: string[]; displayOrder: number; isPublished: boolean; }' is not assignable to parameter of type 'CreateFeatureCatalogItemRequest'.
+  Type '{ key: string; name: string; description: string; category: string; dependencyKeys: string[]; displayOrder: number; isPublished: boolean; }' is missing the following properties from type 'CreateFeatureCatalogItemRequest': iconKey, tags, settingsSchemaJson, defaultSettingsJson, and 2 more.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/feature-catalog/feature-catalog.component.ts:110:52:
+[37m      110 │       : this.tenantService.createFeatureCatalogItem([32m{[37m
+          ╵                                                     [32m^[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: SlicePipe is not used within the template of TenantsListComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'p-select'.
+1. If 'p-select' is an Angular component and it has 'ngModel' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'p-select' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:189:12:
+[37m      189 │             [32m[ngModel]="roleIdInput()"[37m
+          ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type 'Event' is not assignable to parameter of type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:190:45:
+[37m      190 │             (ngModelChange)="roleIdInput.set([32m$event[37m)"
+          ╵                                              [32m~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8004: No pipe found with name 'roleLabel'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:202:33:
+[37m      202 │               {{ roleOptions() | [32mroleLabel[37m:rId }}
+          ╵                                  [32m~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: SlicePipe is not used within the template of TenantsListComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'p-select'.
+1. If 'p-select' is an Angular component and it has 'ngModel' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'p-select' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:189:12:
+[37m      189 │             [32m[ngModel]="roleIdInput()"[37m
+          ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type 'Event' is not assignable to parameter of type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:190:45:
+[37m      190 │             (ngModelChange)="roleIdInput.set([32m$event[37m)"
+          ╵                                              [32m~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getRoleName' does not exist on type 'TenantsListComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:202:17:
+[37m      202 │               {{ [32mgetRoleName[37m(rId) }}
+          ╵                  [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: SlicePipe is not used within the template of TenantsListComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'p-select'.
+1. If 'p-select' is an Angular component and it has 'ngModel' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'p-select' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:189:12:
+[37m      189 │             [32m[ngModel]="roleIdInput()"[37m
+          ╵             [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type 'Event' is not assignable to parameter of type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:190:45:
+[37m      190 │             (ngModelChange)="roleIdInput.set([32m$event[37m)"
+          ╵                                              [32m~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getRoleName' does not exist on type 'TenantsListComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:202:17:
+[37m      202 │               {{ [32mgetRoleName[37m(rId) }}
+          ╵                  [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: SlicePipe is not used within the template of TenantsListComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getRoleName' does not exist on type 'TenantsListComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.html:202:17:
+[37m      202 │               {{ [32mgetRoleName[37m(rId) }}
+          ╵                  [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TenantsListComponent.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./tenants-list.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: SlicePipe is not used within the template of TenantsListComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+  Unknown reference.
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'SlicePipe'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/tenants/tenants-list/tenants-list.component.ts:31:14:
+[37m      31 │     DatePipe, [32mSlicePipe[37m,
+         ╵               [32m~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'toggle' does not exist on type 'HTMLElement'. Did you mean 'ontoggle'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/topbar/topbar.component.html:41:24:
+[37m      41 │       (click)="userMenu.[32mtoggle[37m($event)"
+         ╵                         [32m~~~~~~[0m
+
+  Error occurs in the template of component TopbarComponent.
+
+    src/app/layout/topbar/topbar.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./topbar.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'p-popover' is not a known element:
+1. If 'p-popover' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'p-popover' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/topbar/topbar.component.html:53:0:
+[37m      53 │ [32m<p-popover #userMenu styleClass="app-user-popover">[37m
+         ╵ [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component TopbarComponent.
+
+    src/app/layout/topbar/topbar.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./topbar.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'hide' does not exist on type 'HTMLElement'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/topbar/topbar.component.html:65:116:
+[37m      65 │ ...p-user-popover__item--danger" (click)="logout(); userMenu.[32mhide[37m()">
+         ╵                                                              [32m~~~~[0m
+
+  Error occurs in the template of component TopbarComponent.
+
+    src/app/layout/topbar/topbar.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./topbar.component.html'[37m
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, SlicePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -15,6 +15,8 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { TenantResponse } from '../../../core/models/tenant.model';
 import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../core/models/user.model';
+import { RoleService } from '../../../core/services/role.service';
+import { RoleResponse } from '../../../core/models/role.model';
 
 interface UserSelectOption {
   label: string;
@@ -26,10 +28,10 @@ interface UserSelectOption {
   selector: 'app-tenants-list',
   standalone: true,
   imports: [
-    DatePipe, SlicePipe,
+    DatePipe,
     TableModule, ButtonModule, DialogModule, ConfirmDialogModule,
     ToastModule, InputTextModule, SelectModule, SkeletonModule, TooltipModule,
-    ReactiveFormsModule
+    ReactiveFormsModule, FormsModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './tenants-list.component.html'
@@ -37,6 +39,7 @@ interface UserSelectOption {
 export class TenantsListComponent implements OnInit {
   private tenantService = inject(TenantService);
   private userService = inject(UserService);
+  private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
   private confirmSvc = inject(ConfirmationService);
   private msgSvc = inject(MessageService);
@@ -49,6 +52,14 @@ export class TenantsListComponent implements OnInit {
   manageDialogVisible = signal(false);
   roleIdInput = signal('');
   users = signal<UserResponse[]>([]);
+  allRoles = signal<RoleResponse[]>([]);
+  roleOptions = computed(() => this.allRoles().map(r => ({ label: r.name, value: r.id })));
+  availableRoleOptions = computed(() => {
+    const assigned = new Set(this.selectedTenant()?.roleIds ?? []);
+    return this.roleOptions().filter(o => !assigned.has(o.value));
+  });
+  activeTenants = computed(() => this.tenants().filter(tenant => tenant.isActive).length);
+  unlockedTenants = computed(() => this.tenants().filter(tenant => !!tenant.setupCompletedAt).length);
   ownerUserOptions = computed(() => this.users().map(user => this.toUserOption(user)));
   availableMemberUserOptions = computed(() => {
     const selected = this.selectedTenant();
@@ -70,8 +81,9 @@ export class TenantsListComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadTenants();
     this.loadUsers();
-    this.loading.set(false);
+    this.roleService.getAll().subscribe({ next: roles => this.allRoles.set(roles) });
   }
 
   openCreate(): void {
@@ -193,6 +205,10 @@ export class TenantsListComponent implements OnInit {
     });
   }
 
+  getRoleName(roleId: string): string {
+    return this.allRoles().find(r => r.id === roleId)?.name ?? roleId.slice(0, 8) + '…';
+  }
+
   userLabel(user: UserResponse): string {
     const fullName = `${user.firstName} ${user.lastName}`.trim();
     return fullName ? `${fullName} (${user.userName})` : user.userName;
@@ -210,6 +226,20 @@ export class TenantsListComponent implements OnInit {
     this.userService.getAll().subscribe({
       next: users => this.users.set(users),
       error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' })
+    });
+  }
+
+  private loadTenants(): void {
+    this.loading.set(true);
+    this.tenantService.getAll().subscribe({
+      next: tenants => {
+        this.tenants.set(tenants);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tenants.' });
+      }
     });
   }
 }

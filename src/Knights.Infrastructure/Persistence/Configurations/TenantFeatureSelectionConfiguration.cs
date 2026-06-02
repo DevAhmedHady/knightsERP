@@ -10,6 +10,7 @@ internal sealed class TenantFeatureSelectionConfiguration : IEntityTypeConfigura
     {
         builder.ToTable("TenantFeatureSelections");
         builder.ConfigureBaseEntity();
+        builder.Property(selection => selection.SettingsJson).IsRequired().HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
 
         builder.HasOne(selection => selection.Tenant)
             .WithMany(tenant => tenant.TenantFeatureSelections)

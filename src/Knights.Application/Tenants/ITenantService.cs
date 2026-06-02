@@ -20,6 +20,7 @@ public interface ITenantService
     Task<TenantSetupSummaryResponse> ConfigureCurrentEnvironmentAsync(ConfigureTenantEnvironmentRequest request, CancellationToken ct = default);
     Task<TenantSetupSummaryResponse> SelectCurrentFeatureAsync(Guid featureId, CancellationToken ct = default);
     Task<TenantSetupSummaryResponse> RemoveCurrentFeatureAsync(Guid featureId, CancellationToken ct = default);
+    Task<TenantSetupSummaryResponse> UpdateCurrentFeatureSettingsAsync(Guid featureId, UpdateTenantFeatureSettingsRequest request, CancellationToken ct = default);
     Task<IReadOnlyCollection<FeatureCatalogItemResponse>> GetCatalogAsync(CancellationToken ct = default);
     Task<FeatureCatalogItemResponse> CreateCatalogFeatureAsync(CreateFeatureCatalogItemRequest request, CancellationToken ct = default);
     Task<FeatureCatalogItemResponse> UpdateCatalogFeatureAsync(Guid featureId, UpdateFeatureCatalogItemRequest request, CancellationToken ct = default);

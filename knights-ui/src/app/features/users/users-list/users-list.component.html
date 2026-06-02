@@ -2,12 +2,25 @@
   <p-toast />
   <p-confirmDialog />
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
+  <div class="app-hero">
+    <div class="app-hero__copy">
+      <span class="app-hero__eyebrow">Identity directory</span>
       <h2 class="app-page-title">Users</h2>
-      <p class="app-subtitle mt-1">Manage system users</p>
+      <p class="app-subtitle mt-1">Manage operator identities, ownership, and confirmation posture across the platform.</p>
     </div>
-    <p-button label="New User" icon="pi pi-plus" (onClick)="openCreate()" />
+    <div class="app-hero__metrics">
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Confirmed</span>
+        <strong>{{ confirmedUsers() }}</strong>
+      </div>
+      <div class="app-hero__metric">
+        <span class="app-hero__metric-label">Unassigned</span>
+        <strong>{{ unassignedUsers() }}</strong>
+      </div>
+    </div>
+    <div class="sm:ml-auto">
+      <p-button label="New User" icon="pi pi-plus" (onClick)="openCreate()" />
+    </div>
   </div>
 
   <div class="app-panel overflow-x-auto">
@@ -43,7 +56,7 @@
         <tr>
           <th pSortableColumn="firstName">Name <p-sortIcon field="firstName" /></th>
           <th pSortableColumn="userName">Username <p-sortIcon field="userName" /></th>
-          <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
+          <th>Scope</th>
           <th>Confirmed</th>
           <th style="width:8rem">Actions</th>
         </tr>
@@ -61,7 +74,9 @@
             </div>
           </td>
           <td class="font-semibold text-[var(--surface-700)]">{{ user.userName }}</td>
-          <td class="text-[var(--surface-500)]">{{ user.email }}</td>
+          <td>
+            <span class="app-code-pill">{{ user.tenantId ? 'Tenant' : 'System' }}</span>
+          </td>
           <td>
             <span
               class="app-status-pill"

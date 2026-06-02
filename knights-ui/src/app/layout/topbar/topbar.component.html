@@ -8,23 +8,24 @@
       <i class="pi pi-bars text-lg"></i>
     </button>
     <div class="min-w-0">
-      <span class="app-topbar__eyebrow">Operations cockpit</span>
-      <h1 class="app-topbar__title">Knights Admin</h1>
+      <span class="app-topbar__eyebrow">{{ isSystemAdmin ? 'Platform oversight' : 'Tenant operations' }}</span>
+      <h1 class="app-topbar__title">{{ displayTitle }}</h1>
+      <p class="app-topbar__subtitle hidden lg:block">{{ displaySubtitle }}</p>
     </div>
   </div>
 
   <div class="hidden min-w-0 flex-1 items-center justify-center xl:flex">
     <label class="app-topbar-search">
       <i class="pi pi-search"></i>
-      <input type="text" placeholder="Search users, roles, permissions" />
+      <input type="text" [placeholder]="isSystemAdmin ? 'Search tenants, users, roles, permissions' : 'Search setup, members, features'" />
       <span class="app-topbar-search__hint">Ctrl K</span>
     </label>
   </div>
 
   <div class="flex items-center gap-2 sm:gap-3">
     <div class="app-topbar-chip hidden lg:flex">
-      <i class="pi pi-star-fill text-xs"></i>
-      <span>June access review</span>
+      <i [class]="isSystemAdmin ? 'pi pi-shield text-xs' : 'pi pi-building text-xs'"></i>
+      <span>{{ isSystemAdmin ? 'Catalog and tenant governance' : tenantCodeName }}</span>
     </div>
 
     <button
@@ -35,12 +36,37 @@
       <i [class]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'" class="text-lg"></i>
     </button>
 
-    <div class="app-topbar-profile">
-      <div class="app-topbar-profile__avatar">AU</div>
+    <button
+      type="button"
+      (click)="userMenu.toggle($event)"
+      class="app-topbar-profile app-topbar-profile--interactive cursor-pointer">
+      <div class="app-topbar-profile__avatar">{{ initials }}</div>
       <div class="hidden text-left xl:block">
-        <p class="app-topbar-profile__name">Admin User</p>
-        <p class="app-topbar-profile__role">Security Admin</p>
+        <p class="app-topbar-profile__name">{{ displayName }}</p>
+        <p class="app-topbar-profile__role">{{ displayRole }}</p>
       </div>
-    </div>
+      <i class="pi pi-angle-down hidden xl:block text-xs text-[var(--surface-400)] mr-0.5"></i>
+    </button>
   </div>
 </header>
+
+<p-popover #userMenu styleClass="app-user-popover">
+  <div class="app-user-popover__header">
+    <div class="app-user-popover__avatar">{{ initials }}</div>
+    <div class="min-w-0">
+      <p class="app-user-popover__name">{{ displayName }}</p>
+      <p class="app-user-popover__role">{{ displayRole }}</p>
+    </div>
+  </div>
+
+  <div class="app-user-popover__divider"></div>
+
+  <nav class="app-user-popover__nav">
+    <button type="button" class="app-user-popover__item app-user-popover__item--danger" (click)="logout(); userMenu.hide()">
+      <span class="app-user-popover__item-icon">
+        <i class="pi pi-sign-out"></i>
+      </span>
+      <span>Sign out</span>
+    </button>
+  </nav>
+</p-popover>

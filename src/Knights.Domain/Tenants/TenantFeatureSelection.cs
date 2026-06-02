@@ -10,10 +10,11 @@ public class TenantFeatureSelection : AuditedEntity
 
     public Guid TenantId { get; private set; }
     public Guid FeatureCatalogItemId { get; private set; }
+    public string SettingsJson { get; private set; } = "{}";
     public Tenant? Tenant { get; private set; }
     public FeatureCatalogItem? FeatureCatalogItem { get; private set; }
 
-    public static TenantFeatureSelection Create(Guid tenantId, Guid featureCatalogItemId, Guid? id = null)
+    public static TenantFeatureSelection Create(Guid tenantId, Guid featureCatalogItemId, string? settingsJson = null, Guid? id = null)
     {
         ValidationRules.IsNotEmpty(nameof(tenantId), tenantId);
         ValidationRules.IsNotEmpty(nameof(featureCatalogItemId), featureCatalogItemId);
@@ -22,8 +23,14 @@ public class TenantFeatureSelection : AuditedEntity
         {
             Id = id.GetValueOrDefault(Guid.NewGuid()),
             TenantId = tenantId,
-            FeatureCatalogItemId = featureCatalogItemId
+            FeatureCatalogItemId = featureCatalogItemId,
+            SettingsJson = NormalizeJson(settingsJson)
         };
+    }
+
+    public void UpdateSettings(string? settingsJson)
+    {
+        SettingsJson = NormalizeJson(settingsJson);
     }
 
     public override bool Equals(BaseEntity? other)
@@ -31,6 +38,14 @@ public class TenantFeatureSelection : AuditedEntity
         return other is TenantFeatureSelection selection &&
                Id == selection.Id &&
                TenantId == selection.TenantId &&
-               FeatureCatalogItemId == selection.FeatureCatalogItemId;
+               FeatureCatalogItemId == selection.FeatureCatalogItemId &&
+               SettingsJson == selection.SettingsJson;
+    }
+
+    private static string NormalizeJson(string? json)
+    {
+        var trimmed = string.IsNullOrWhiteSpace(json) ? "{}" : json.Trim();
+        using var _ = System.Text.Json.JsonDocument.Parse(trimmed);
+        return trimmed;
     }
 }

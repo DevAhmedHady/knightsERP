@@ -180,6 +180,20 @@ public sealed class TenantService(
         return BuildSetupSummary(refreshed, availableFeatures);
     }
 
+    public async Task<TenantSetupSummaryResponse> UpdateCurrentFeatureSettingsAsync(Guid featureId, UpdateTenantFeatureSettingsRequest request, CancellationToken ct = default)
+    {
+        var tenant = await GetCurrentTenantAsync(ct);
+        var selection = tenant.TenantFeatureSelections.FirstOrDefault(item => item.FeatureCatalogItemId == featureId)
+            ?? throw new InvalidOperationException($"Feature '{featureId}' is not selected for this tenant.");
+
+        selection.UpdateSettings(request.SettingsJson);
+        await tenantRepository.UpdateAsync(tenant, ct);
+
+        var availableFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: false, ct);
+        var refreshed = await GetRequiredTenantAsync(tenant.Id, ct);
+        return BuildSetupSummary(refreshed, availableFeatures);
+    }
+
     public async Task<IReadOnlyCollection<FeatureCatalogItemResponse>> GetCatalogAsync(CancellationToken ct = default)
     {
         var features = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: IsSystemAdmin, ct);
@@ -201,7 +215,13 @@ public sealed class TenantService(
             request.Name,
             request.Description,
             request.Category,
+            request.IconKey,
+            request.Tags,
             request.DependencyKeys,
+            request.SettingsSchemaJson,
+            request.DefaultSettingsJson,
+            request.SetupWeight,
+            request.IsCore,
             request.DisplayOrder,
             request.IsPublished);
 
@@ -222,7 +242,13 @@ public sealed class TenantService(
             request.Name,
             request.Description,
             request.Category,
+            request.IconKey,
+            request.Tags,
             request.DependencyKeys,
+            request.SettingsSchemaJson,
+            request.DefaultSettingsJson,
+            request.SetupWeight,
+            request.IsCore,
             request.DisplayOrder,
             request.IsPublished,
             request.IsRetired);
@@ -287,7 +313,13 @@ public sealed class TenantService(
             feature.Name,
             feature.Description,
             feature.Category,
+            feature.IconKey,
+            feature.Tags.ToArray(),
             feature.DependencyKeys.ToArray(),
+            feature.SettingsSchemaJson,
+            feature.DefaultSettingsJson,
+            feature.SetupWeight,
+            feature.IsCore,
             feature.DisplayOrder,
             feature.IsPublished,
             feature.IsRetired);
@@ -337,9 +369,13 @@ public sealed class TenantService(
             featureLookup[selectionFeature!.Id] = selectionFeature;
 
         var selectedFeatures = tenant.TenantFeatureSelections
-            .Select(selection => featureLookup.GetValueOrDefault(selection.FeatureCatalogItemId))
+            .Select(selection =>
+            {
+                var feature = featureLookup.GetValueOrDefault(selection.FeatureCatalogItemId);
+                return feature is null ? null : MapSelectedFeature(feature, selection.SettingsJson);
+            })
             .Where(feature => feature is not null)
-            .Select(feature => MapFeature(feature!))
+            .Select(feature => feature!)
             .ToList();
 
         return new TenantSetupSummaryResponse(
@@ -354,5 +390,26 @@ public sealed class TenantService(
             steps,
             availableFeatures.Select(MapFeature).ToList(),
             selectedFeatures);
+    }
+
+    private static TenantSelectedFeatureResponse MapSelectedFeature(FeatureCatalogItem feature, string settingsJson)
+    {
+        return new TenantSelectedFeatureResponse(
+            feature.Id,
+            feature.Key,
+            feature.Name,
+            feature.Description,
+            feature.Category,
+            feature.IconKey,
+            feature.Tags.ToArray(),
+            feature.DependencyKeys.ToArray(),
+            feature.SettingsSchemaJson,
+            feature.DefaultSettingsJson,
+            settingsJson,
+            feature.SetupWeight,
+            feature.IsCore,
+            feature.DisplayOrder,
+            feature.IsPublished,
+            feature.IsRetired);
     }
 }

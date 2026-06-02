@@ -11,4 +11,4 @@ public sealed record TenantSetupSummaryResponse(
     bool IsComplete,
     IReadOnlyCollection<TenantSetupStepResponse> Steps,
     IReadOnlyCollection<FeatureCatalogItemResponse> AvailableFeatures,
-    IReadOnlyCollection<FeatureCatalogItemResponse> SelectedFeatures);
+    IReadOnlyCollection<TenantSelectedFeatureResponse> SelectedFeatures);

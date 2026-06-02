@@ -204,7 +204,13 @@ public class TenantServiceTests
             "Base World",
             "Base module",
             "Foundation",
+            "pi pi-globe",
+            ["core"],
             [],
+            "{}",
+            """{"brandingMode":"basic"}""",
+            30,
+            true,
             1,
             true));
 
@@ -214,7 +220,13 @@ public class TenantServiceTests
             "Events",
             "Event engine",
             "Gameplay",
+            "pi pi-bolt",
+            ["events"],
             ["BASE_WORLD"],
+            "{}",
+            """{"retentionDays":30}""",
+            15,
+            false,
             2,
             true));
 
@@ -240,8 +252,69 @@ public class TenantServiceTests
             "Ops",
             "Ops module",
             "Foundation",
+            "pi pi-map",
+            ["ops"],
             [],
+            "{}",
+            "{}",
+            10,
+            false,
             1,
             true)));
+    }
+
+    [Fact]
+    public async Task CreateCatalogFeatureAsync_PersistsAdvancedMetadata()
+    {
+        var (service, _, _) = CreateService();
+
+        var feature = await service.CreateCatalogFeatureAsync(new CreateFeatureCatalogItemRequest(
+            "ANALYTICS",
+            "Analytics",
+            "Insight tools",
+            "Insights",
+            "pi pi-chart-bar",
+            ["analytics", "health"],
+            [],
+            """{"type":"object"}""",
+            """{"refreshMinutes":15}""",
+            25,
+            false,
+            3,
+            true));
+
+        Assert.Equal("pi pi-chart-bar", feature.IconKey);
+        Assert.Equal(2, feature.Tags.Count);
+        Assert.Equal(25, feature.SetupWeight);
+        Assert.Contains("refreshMinutes", feature.DefaultSettingsJson);
+    }
+
+    [Fact]
+    public async Task UpdateCurrentFeatureSettingsAsync_PersistsTenantSpecificSettings()
+    {
+        var (service, _, _) = CreateService();
+        var tenant = await service.CreateAsync(MakeCreateRequest("sigma"));
+
+        var feature = await service.CreateCatalogFeatureAsync(new CreateFeatureCatalogItemRequest(
+            "FIELD",
+            "Field",
+            "Field ops",
+            "Operations",
+            "pi pi-map",
+            ["field"],
+            [],
+            """{"type":"object","properties":{"zones":{"type":"string"},"active":{"type":"boolean"}}}""",
+            """{"zones":"","active":false}""",
+            10,
+            false,
+            2,
+            true));
+
+        _tenantContext.TenantId = tenant.Id;
+        await service.SelectCurrentFeatureAsync(feature.Id);
+
+        var summary = await service.UpdateCurrentFeatureSettingsAsync(feature.Id, new UpdateTenantFeatureSettingsRequest("""{"zones":"north","active":true}"""));
+
+        Assert.Contains(summary.SelectedFeatures, item => item.Id == feature.Id && item.SettingsJson.Contains("north"));
     }
 }
