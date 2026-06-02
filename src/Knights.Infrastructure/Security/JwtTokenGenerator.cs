@@ -12,9 +12,9 @@ public sealed class JwtTokenGenerator(IOptions<JwtOptions> options) : IJwtTokenG
 {
     private readonly JwtOptions _options = options.Value;
 
-    public JwtToken Generate(User user, Guid? tenantId, string? tenantCodeName)
+    public JwtToken Generate(User user, Guid? tenantId, string? tenantCodeName, int expiryMinutes)
     {
-        var expiresAtUtc = DateTime.UtcNow.AddMinutes(_options.ExpiryMinutes);
+        var expiresAtUtc = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
         var claims = new List<Claim>
         {

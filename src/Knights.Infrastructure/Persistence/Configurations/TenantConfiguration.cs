@@ -18,6 +18,7 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(tenant => tenant.EnvironmentDisplayName).IsRequired().HasMaxLength(256).HasDefaultValue(string.Empty);
         builder.Property(tenant => tenant.ThemeKey).IsRequired().HasMaxLength(128).HasDefaultValue(string.Empty);
         builder.Property(tenant => tenant.WorldDescription).IsRequired().HasMaxLength(2048).HasDefaultValue(string.Empty);
+        builder.Property(tenant => tenant.SessionTimeoutMinutes).IsRequired().HasDefaultValue(60);
 
         builder.HasIndex(tenant => tenant.CodeName).IsUnique();
 

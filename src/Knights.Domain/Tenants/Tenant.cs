@@ -19,6 +19,7 @@ public class Tenant : AuditedEntity
     public string EnvironmentDisplayName { get; private set; } = string.Empty;
     public string ThemeKey { get; private set; } = string.Empty;
     public string WorldDescription { get; private set; } = string.Empty;
+    public int SessionTimeoutMinutes { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime? ExpiryDate { get; private set; }
     public DateTime? SetupStartedAt { get; private set; }
@@ -42,11 +43,12 @@ public class Tenant : AuditedEntity
             IsActive = true,
             OwnerId = ownerId,
             ExpiryDate = expiryDate,
+            SessionTimeoutMinutes = 60,
             SetupStartedAt = DateTime.UtcNow
         };
     }
 
-    public void Update(string name, string description, DateTime? expiryDate)
+    public void Update(string name, string description, DateTime? expiryDate, int? sessionTimeoutMinutes = null)
     {
         ValidationRules.IsNotNullOrWhiteSpace(nameof(Name), name);
         ValidationRules.IsFutureDate(nameof(ExpiryDate), expiryDate);
@@ -54,6 +56,16 @@ public class Tenant : AuditedEntity
         Name = name.Trim();
         Description = description.Trim();
         ExpiryDate = expiryDate;
+        if (sessionTimeoutMinutes.HasValue)
+        {
+            SetSessionTimeoutMinutes(sessionTimeoutMinutes.Value);
+        }
+    }
+
+    public void SetSessionTimeoutMinutes(int sessionTimeoutMinutes)
+    {
+        ValidationRules.IsBetween(nameof(SessionTimeoutMinutes), sessionTimeoutMinutes, 1, 1440);
+        SessionTimeoutMinutes = sessionTimeoutMinutes;
     }
 
     public void SetActive(bool isActive)
@@ -153,6 +165,7 @@ public class Tenant : AuditedEntity
                EnvironmentDisplayName == otherTenant.EnvironmentDisplayName &&
                ThemeKey == otherTenant.ThemeKey &&
                WorldDescription == otherTenant.WorldDescription &&
+               SessionTimeoutMinutes == otherTenant.SessionTimeoutMinutes &&
                IsActive == otherTenant.IsActive &&
                ExpiryDate == otherTenant.ExpiryDate &&
                OwnerId == otherTenant.OwnerId;

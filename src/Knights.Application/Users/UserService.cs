@@ -4,10 +4,15 @@ using Knights.Application.Common.Mapping;
 using Knights.Application.Users.Requests;
 using Knights.Application.Users.Responses;
 using Knights.Domain.Identity;
+using Knights.Domain.Tenants;
 
 namespace Knights.Application.Users;
 
-public sealed class UserService(IUserRepository userRepository, IPasswordHasher passwordHasher) : IUserService
+public sealed class UserService(
+    IUserRepository userRepository,
+    IPasswordHasher passwordHasher,
+    ITenantContext tenantContext,
+    ITenantRepository tenantRepository) : IUserService
 {
     static UserService()
     {
@@ -28,6 +33,13 @@ public sealed class UserService(IUserRepository userRepository, IPasswordHasher 
             request.Email,
             passwordHash,
             request.IsEmailConfirmed);
+
+        var currentTenant = await GetCurrentTenantAsync(cancellationToken);
+        if (currentTenant is not null)
+            user.JoinTenant(currentTenant.Id);
+
+        ValidateSessionTimeoutMinutes(currentTenant, request.SessionTimeoutMinutes);
+        user.SetSessionTimeoutMinutes(request.SessionTimeoutMinutes);
 
         await userRepository.AddAsync(user, cancellationToken);
         return user.Adapt<UserResponse>();
@@ -57,6 +69,11 @@ public sealed class UserService(IUserRepository userRepository, IPasswordHasher 
             request.Email,
             request.IsEmailConfirmed);
 
+        var targetTenant = await GetTenantForUserAsync(user, cancellationToken);
+        EnsureUserWritableByCurrentScope(targetTenant, user);
+        ValidateSessionTimeoutMinutes(targetTenant, request.SessionTimeoutMinutes);
+        user.SetSessionTimeoutMinutes(request.SessionTimeoutMinutes);
+
         await userRepository.UpdateAsync(user, cancellationToken);
         return user.Adapt<UserResponse>();
     }
@@ -83,5 +100,41 @@ public sealed class UserService(IUserRepository userRepository, IPasswordHasher 
     {
         var user = await userRepository.GetByIdAsync(id, cancellationToken);
         return user ?? throw new InvalidOperationException($"User '{id}' was not found.");
+    }
+
+    private async Task<Tenant?> GetCurrentTenantAsync(CancellationToken cancellationToken)
+    {
+        if (!tenantContext.TenantId.HasValue)
+            return null;
+
+        return await tenantRepository.GetByIdAsync(tenantContext.TenantId.Value, cancellationToken)
+            ?? throw new InvalidOperationException($"Tenant '{tenantContext.TenantId.Value}' was not found.");
+    }
+
+    private async Task<Tenant?> GetTenantForUserAsync(User user, CancellationToken cancellationToken)
+    {
+        if (!user.TenantId.HasValue)
+            return null;
+
+        return await tenantRepository.GetByIdAsync(user.TenantId.Value, cancellationToken)
+            ?? throw new InvalidOperationException($"Tenant '{user.TenantId.Value}' was not found.");
+    }
+
+    private void EnsureUserWritableByCurrentScope(Tenant? tenant, User user)
+    {
+        if (!tenantContext.TenantId.HasValue)
+            return;
+
+        if (tenant is null || user.TenantId != tenantContext.TenantId)
+            throw new InvalidOperationException("Tenant admins can only manage users inside their tenant.");
+    }
+
+    private static void ValidateSessionTimeoutMinutes(Tenant? tenant, int? sessionTimeoutMinutes)
+    {
+        if (!sessionTimeoutMinutes.HasValue || tenant is null)
+            return;
+
+        if (sessionTimeoutMinutes.Value > tenant.SessionTimeoutMinutes)
+            throw new InvalidOperationException($"User session timeout cannot exceed tenant limit of {tenant.SessionTimeoutMinutes} minutes.");
     }
 }

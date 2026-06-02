@@ -131,6 +131,11 @@
       <label>Email *</label>
       <input pInputText formControlName="email" type="email" placeholder="user@example.com" />
     </div>
+    <div class="app-form-field">
+      <label>Session Timeout (Minutes)</label>
+      <input pInputText formControlName="sessionTimeoutMinutes" type="number" min="1" max="1440" placeholder="60" />
+      <span class="app-field-hint">Tenant admins cannot exceed the tenant session limit.</span>
+    </div>
     @if (!editingId()) {
       <div class="app-form-field">
         <label>Password</label>

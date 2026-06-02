@@ -10,6 +10,7 @@ public sealed record TenantResponse(
     string WorldDescription,
     bool IsActive,
     DateTime? ExpiryDate,
+    int SessionTimeoutMinutes,
     Guid OwnerId,
     DateTime? SetupStartedAt,
     DateTime? SetupCompletedAt,

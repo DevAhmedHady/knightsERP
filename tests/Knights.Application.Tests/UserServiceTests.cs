@@ -8,7 +8,7 @@ namespace Knights.Application.Tests;
 public class UserServiceTests
 {
     private static UserService CreateService(InMemoryUserRepository repository)
-        => new(repository, new FakePasswordHasher());
+        => new(repository, new FakePasswordHasher(), new FakeTenantContext(), new InMemoryTenantRepository());
 
     [Fact]
     public async Task CreateAsync_CreatesUserAndMapsResponse()

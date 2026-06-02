@@ -44,7 +44,8 @@ export class UsersListComponent implements OnInit {
     userName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
-    isEmailConfirmed: [false]
+    isEmailConfirmed: [false],
+    sessionTimeoutMinutes: [60]
   });
 
   ngOnInit(): void {
@@ -62,7 +63,7 @@ export class UsersListComponent implements OnInit {
 
   openCreate(): void {
     this.editingId.set(null);
-    this.form.reset({ isEmailConfirmed: false });
+    this.form.reset({ isEmailConfirmed: false, sessionTimeoutMinutes: 60 });
     this.dialogVisible.set(true);
   }
 
@@ -84,7 +85,8 @@ export class UsersListComponent implements OnInit {
           lastName: val.lastName!,
           userName: val.userName!,
           email: val.email!,
-          isEmailConfirmed: val.isEmailConfirmed ?? false
+          isEmailConfirmed: val.isEmailConfirmed ?? false,
+          sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
         })
       : this.userService.create({
           firstName: val.firstName!,
@@ -93,7 +95,8 @@ export class UsersListComponent implements OnInit {
           userName: val.userName!,
           email: val.email!,
           password: val.password ?? undefined,
-          isEmailConfirmed: val.isEmailConfirmed ?? false
+          isEmailConfirmed: val.isEmailConfirmed ?? false,
+          sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
         });
 
     obs.subscribe({

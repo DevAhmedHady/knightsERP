@@ -22,6 +22,9 @@ public sealed class TenantService(
     public async Task<TenantResponse> CreateAsync(CreateTenantRequest request, CancellationToken ct = default)
     {
         var tenant = Tenant.Create(request.CodeName, request.Name, request.Description, request.OwnerId, request.ExpiryDate);
+        if (request.SessionTimeoutMinutes.HasValue)
+            tenant.SetSessionTimeoutMinutes(request.SessionTimeoutMinutes.Value);
+
         await tenantRepository.AddAsync(tenant, ct);
         return MapTenantResponse(tenant);
     }
@@ -47,7 +50,7 @@ public sealed class TenantService(
     public async Task UpdateAsync(Guid id, UpdateTenantRequest request, CancellationToken ct = default)
     {
         var tenant = await GetRequiredTenantAsync(id, ct);
-        tenant.Update(request.Name, request.Description, request.ExpiryDate);
+        tenant.Update(request.Name, request.Description, request.ExpiryDate, request.SessionTimeoutMinutes);
         await tenantRepository.UpdateAsync(tenant, ct);
     }
 
@@ -298,6 +301,7 @@ public sealed class TenantService(
             tenant.WorldDescription,
             tenant.IsActive,
             tenant.ExpiryDate,
+            tenant.SessionTimeoutMinutes,
             tenant.OwnerId,
             tenant.SetupStartedAt,
             tenant.SetupCompletedAt,

@@ -1,4 +1,4 @@
-import { Component, output, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { PopoverModule } from 'primeng/popover';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../theme.service';
@@ -15,7 +15,7 @@ export class TopbarComponent {
   authService = inject(AuthService);
 
   logout(): void {
-    this.authService.logout();
+    this.authService.logoutAndRedirect();
   }
 
   get isSystemAdmin(): boolean {
@@ -42,12 +42,15 @@ export class TopbarComponent {
   }
 
   get displayRole(): string {
-    return this.isSystemAdmin ? 'System Admin' : `Tenant · ${this.tenantCodeName}`;
+    return this.isSystemAdmin ? 'System Admin' : `Tenant - ${this.tenantCodeName}`;
   }
 
   get initials(): string {
     const user = this.authService.currentUser;
-    if (!user) return 'AU';
+    if (!user) {
+      return 'AU';
+    }
+
     return `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase();
   }
 }

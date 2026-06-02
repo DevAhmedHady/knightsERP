@@ -153,6 +153,11 @@
       <label>Expiry Date</label>
       <input pInputText formControlName="expiryDate" type="date" />
     </div>
+    <div class="app-form-field">
+      <label>Tenant Session Timeout (Minutes)</label>
+      <input pInputText formControlName="sessionTimeoutMinutes" type="number" min="1" max="1440" />
+      <span class="app-field-hint">Platform admin limit for tenant users. Default is 60 minutes.</span>
+    </div>
   </form>
 
   <ng-template pTemplate="footer">

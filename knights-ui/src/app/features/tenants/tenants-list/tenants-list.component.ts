@@ -73,7 +73,8 @@ export class TenantsListComponent implements OnInit {
     name: ['', Validators.required],
     description: [''],
     ownerId: ['', Validators.required],
-    expiryDate: ['']
+    expiryDate: [''],
+    sessionTimeoutMinutes: [60, Validators.required]
   });
 
   memberForm = this.fb.group({
@@ -88,7 +89,7 @@ export class TenantsListComponent implements OnInit {
 
   openCreate(): void {
     this.editingId.set(null);
-    this.form.reset();
+    this.form.reset({ sessionTimeoutMinutes: 60 });
     this.form.get('codeName')?.enable();
     this.dialogVisible.set(true);
   }
@@ -100,7 +101,8 @@ export class TenantsListComponent implements OnInit {
       name: tenant.name,
       description: tenant.description,
       ownerId: tenant.ownerId,
-      expiryDate: tenant.expiryDate ?? ''
+      expiryDate: tenant.expiryDate ?? '',
+      sessionTimeoutMinutes: tenant.sessionTimeoutMinutes
     });
     this.form.get('codeName')?.disable();
     this.dialogVisible.set(true);
@@ -127,7 +129,8 @@ export class TenantsListComponent implements OnInit {
       this.tenantService.update(id, {
         name: val.name!,
         description: val.description ?? '',
-        expiryDate: val.expiryDate || undefined
+        expiryDate: val.expiryDate || undefined,
+        sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
       }).subscribe({
         next: () => {
           this.tenants.update(list => list.map(t => t.id === id
@@ -144,7 +147,8 @@ export class TenantsListComponent implements OnInit {
         name: val.name!,
         description: val.description ?? '',
         ownerId: val.ownerId!,
-        expiryDate: val.expiryDate || undefined
+        expiryDate: val.expiryDate || undefined,
+        sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
       }).subscribe({
         next: result => {
           this.tenants.update(list => [result, ...list]);

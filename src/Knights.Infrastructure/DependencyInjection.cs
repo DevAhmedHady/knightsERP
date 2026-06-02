@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.Configure<PersistenceDateTimeOptions>(configuration.GetSection(PersistenceDateTimeOptions.SectionName));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IJwtSessionPolicy, JwtSessionPolicy>();
         services.AddScoped<ITenantContext, HttpTenantContext>();
 
         services.AddDbContext<KnightsDbContext>((serviceProvider, options) =>

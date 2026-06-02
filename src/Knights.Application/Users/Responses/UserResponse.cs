@@ -11,5 +11,6 @@ public sealed record UserResponse(
     bool IsActive,
     DateTime? LastLoginDate,
     Guid? TenantId,
+    int? SessionTimeoutMinutes,
     IReadOnlyCollection<Guid> RoleIds,
     IReadOnlyCollection<Guid> PermissionIds);

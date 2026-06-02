@@ -263,3 +263,59 @@
          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 [39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../topbar/topbar.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/shell/shell.component.ts:4:32:
+[37m      4 │ import { TopbarComponent } from [32m'../topbar/topbar.component'[37m;
+        ╵                                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/shell/shell.component.ts:9:44:
+[37m      9 │   imports: [RouterOutlet, SidebarComponent, [32mTopbarComponent[37m],
+        ╵                                             [32m~~~~~~~~~~~~~~~[0m
+
+  Unknown reference.
+
+    src/app/layout/shell/shell.component.ts:9:44:
+[37m      9 │   imports: [RouterOutlet, SidebarComponent, [32mTopbarComponent[37m],
+        ╵                                             [32m~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "../topbar/topbar.component"[0m
+
+    src/app/layout/shell/shell.component.ts:5:32:
+[37m      5 │ import { TopbarComponent } from [32m'../topbar/topbar.component'[37m;
+        ╵                                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../topbar/topbar.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/shell/shell.component.ts:4:32:
+[37m      4 │ import { TopbarComponent } from [32m'../topbar/topbar.component'[37m;
+        ╵                                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/layout/shell/shell.component.ts:9:44:
+[37m      9 │   imports: [RouterOutlet, SidebarComponent, [32mTopbarComponent[37m],
+        ╵                                             [32m~~~~~~~~~~~~~~~[0m
+
+  Unknown reference.
+
+    src/app/layout/shell/shell.component.ts:9:44:
+[37m      9 │   imports: [RouterOutlet, SidebarComponent, [32mTopbarComponent[37m],
+        ╵                                             [32m~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "../topbar/topbar.component"[0m
+
+    src/app/layout/shell/shell.component.ts:5:32:
+[37m      5 │ import { TopbarComponent } from [32m'../topbar/topbar.component'[37m;
+        ╵                                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

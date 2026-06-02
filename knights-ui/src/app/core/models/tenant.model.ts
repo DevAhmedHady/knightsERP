@@ -8,6 +8,7 @@ export interface TenantResponse {
   worldDescription: string;
   isActive: boolean;
   expiryDate?: string;
+  sessionTimeoutMinutes: number;
   ownerId: string;
   setupStartedAt?: string;
   setupCompletedAt?: string;
@@ -21,12 +22,14 @@ export interface CreateTenantRequest {
   description: string;
   ownerId: string;
   expiryDate?: string;
+  sessionTimeoutMinutes?: number;
 }
 
 export interface UpdateTenantRequest {
   name: string;
   description: string;
   expiryDate?: string;
+  sessionTimeoutMinutes?: number;
 }
 
 export interface FeatureCatalogItemResponse {

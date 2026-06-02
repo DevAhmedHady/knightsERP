@@ -30,4 +30,10 @@ public static class ValidationRules
         if (value.HasValue && value.Value <= DateTime.UtcNow)
             throw new ValidationException(propertyName, $"{propertyName}: value must be in the future.");
     }
+
+    public static void IsBetween(string propertyName, int value, int min, int max)
+    {
+        if (value < min || value > max)
+            throw new ValidationException(propertyName, $"{propertyName}: value must be between {min} and {max}.");
+    }
 }

@@ -9,6 +9,7 @@ export interface UserResponse {
   isActive: boolean;
   lastLoginDate?: string;
   tenantId?: string;
+  sessionTimeoutMinutes?: number;
   roleIds: string[];
   permissionIds: string[];
 }
@@ -21,6 +22,7 @@ export interface CreateUserRequest {
   email: string;
   password?: string;
   isEmailConfirmed?: boolean;
+  sessionTimeoutMinutes?: number;
 }
 
 export interface UpdateUserRequest {
@@ -30,4 +32,5 @@ export interface UpdateUserRequest {
   userName: string;
   email: string;
   isEmailConfirmed: boolean;
+  sessionTimeoutMinutes?: number;
 }

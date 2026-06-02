@@ -14,7 +14,7 @@ public class AuthServiceTests
     {
         var userRepo = new InMemoryUserRepository();
         var tenantRepo = new InMemoryTenantRepository();
-        var service = new AuthService(userRepo, _hasher, new FakeJwtTokenGenerator(), tenantRepo);
+        var service = new AuthService(userRepo, _hasher, new FakeJwtTokenGenerator(), tenantRepo, new FakeJwtSessionPolicy());
         return (service, userRepo, tenantRepo);
     }
 

@@ -7,4 +7,5 @@ public sealed record CreateUserRequest(
     string UserName,
     string Email,
     string? Password = null,
-    bool IsEmailConfirmed = false);
+    bool IsEmailConfirmed = false,
+    int? SessionTimeoutMinutes = null);

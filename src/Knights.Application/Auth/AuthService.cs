@@ -12,7 +12,8 @@ public sealed class AuthService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator tokenGenerator,
-    ITenantRepository tenantRepository) : IAuthService
+    ITenantRepository tenantRepository,
+    IJwtSessionPolicy jwtSessionPolicy) : IAuthService
 {
     static AuthService()
     {
@@ -52,7 +53,8 @@ public sealed class AuthService(
         user.RecordLogin(DateTime.UtcNow);
         await userRepository.UpdateAsync(user, cancellationToken);
 
-        var token = tokenGenerator.Generate(user, tenantId, tenantCodeName);
+        var expiryMinutes = await jwtSessionPolicy.ResolveEffectiveSessionTimeoutMinutesAsync(user, tenantId, cancellationToken);
+        var token = tokenGenerator.Generate(user, tenantId, tenantCodeName, expiryMinutes);
         return new LoginResponse(token.Token, token.ExpiresAtUtc, user.Adapt<UserResponse>(), tenantId, tenantCodeName);
     }
 

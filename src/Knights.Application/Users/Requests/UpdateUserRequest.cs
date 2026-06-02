@@ -6,4 +6,5 @@ public sealed record UpdateUserRequest(
     string LastName,
     string UserName,
     string Email,
-    bool IsEmailConfirmed);
+    bool IsEmailConfirmed,
+    int? SessionTimeoutMinutes = null);

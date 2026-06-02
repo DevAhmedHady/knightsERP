@@ -20,6 +20,7 @@ public class User : AuditedEntity
     public bool IsActive { get; private set; }
     public DateTime? LastLoginDate { get; private set; }
     public Guid? TenantId { get; private set; }
+    public int? SessionTimeoutMinutes { get; private set; }
     public bool IsSystemAdmin => TenantId is null;
     public IReadOnlyCollection<UserRole> UserRoles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserPermission> UserPermissions => _permissions.AsReadOnly();
@@ -72,6 +73,14 @@ public class User : AuditedEntity
     public void SetActive(bool isActive)
     {
         IsActive = isActive;
+    }
+
+    public void SetSessionTimeoutMinutes(int? sessionTimeoutMinutes)
+    {
+        if (sessionTimeoutMinutes.HasValue)
+            ValidationRules.IsBetween(nameof(SessionTimeoutMinutes), sessionTimeoutMinutes.Value, 1, 1440);
+
+        SessionTimeoutMinutes = sessionTimeoutMinutes;
     }
 
     public void ConfirmEmail()
@@ -146,7 +155,8 @@ public class User : AuditedEntity
                IsEmailConfirmed == otherUser.IsEmailConfirmed &&
                IsActive == otherUser.IsActive &&
                LastLoginDate == otherUser.LastLoginDate &&
-               TenantId == otherUser.TenantId;
+               TenantId == otherUser.TenantId &&
+               SessionTimeoutMinutes == otherUser.SessionTimeoutMinutes;
     }
 
     private static void Validate(string userName, string email)
