@@ -15,6 +15,9 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(tenant => tenant.CodeName).IsRequired().HasMaxLength(256);
         builder.Property(tenant => tenant.Name).IsRequired().HasMaxLength(256);
         builder.Property(tenant => tenant.Description).IsRequired().HasMaxLength(1024);
+        builder.Property(tenant => tenant.EnvironmentDisplayName).IsRequired().HasMaxLength(256).HasDefaultValue(string.Empty);
+        builder.Property(tenant => tenant.ThemeKey).IsRequired().HasMaxLength(128).HasDefaultValue(string.Empty);
+        builder.Property(tenant => tenant.WorldDescription).IsRequired().HasMaxLength(2048).HasDefaultValue(string.Empty);
 
         builder.HasIndex(tenant => tenant.CodeName).IsUnique();
 
@@ -24,6 +27,10 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
 
         builder.Navigation(tenant => tenant.TenantPermissions)
             .HasField("_permissions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(tenant => tenant.TenantFeatureSelections)
+            .HasField("_featureSelections")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

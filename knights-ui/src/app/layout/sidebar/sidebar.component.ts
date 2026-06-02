@@ -7,6 +7,8 @@ interface NavItem {
   shortLabel: string;
   icon: string;
   route: string;
+  systemAdminOnly?: boolean;
+  tenantOnly?: boolean;
 }
 
 @Component({
@@ -27,6 +29,8 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { label: 'Dashboard', shortLabel: 'DB', icon: 'pi pi-home', route: '/dashboard' },
     { label: 'Tenants', shortLabel: 'TN', icon: 'pi pi-building', route: '/tenants' },
+    { label: 'Setup', shortLabel: 'ST', icon: 'pi pi-sparkles', route: '/setup', tenantOnly: true },
+    { label: 'Feature Catalog', shortLabel: 'FC', icon: 'pi pi-sliders-h', route: '/feature-catalog', systemAdminOnly: true },
     { label: 'Users', shortLabel: 'US', icon: 'pi pi-users', route: '/users' },
     { label: 'Roles', shortLabel: 'RL', icon: 'pi pi-shield', route: '/roles' },
     { label: 'Permissions', shortLabel: 'PM', icon: 'pi pi-lock', route: '/permissions' }
@@ -55,5 +59,17 @@ export class SidebarComponent {
     if (!this.isDesktop()) {
       this.closeSidebar.emit();
     }
+  }
+
+  canShow(item: NavItem): boolean {
+    if (item.systemAdminOnly) {
+      return this.isSystemAdmin;
+    }
+
+    if (item.tenantOnly) {
+      return !this.isSystemAdmin;
+    }
+
+    return true;
   }
 }

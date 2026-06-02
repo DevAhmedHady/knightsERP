@@ -2,7 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '../models/tenant.model';
+import {
+  TenantResponse,
+  CreateTenantRequest,
+  UpdateTenantRequest,
+  TenantSetupSummaryResponse,
+  ConfigureTenantEnvironmentRequest,
+  FeatureCatalogItemResponse,
+  CreateFeatureCatalogItemRequest,
+  UpdateFeatureCatalogItemRequest
+} from '../models/tenant.model';
 
 @Injectable({ providedIn: 'root' })
 export class TenantService {
@@ -47,5 +56,33 @@ export class TenantService {
 
   removeMember(tenantId: string, userId: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${tenantId}/members/${userId}`);
+  }
+
+  getCurrentSetup(): Observable<TenantSetupSummaryResponse> {
+    return this.http.get<TenantSetupSummaryResponse>(`${this.base}/current/setup`);
+  }
+
+  configureCurrentEnvironment(req: ConfigureTenantEnvironmentRequest): Observable<TenantSetupSummaryResponse> {
+    return this.http.put<TenantSetupSummaryResponse>(`${this.base}/current/environment`, req);
+  }
+
+  selectCurrentFeature(featureId: string): Observable<TenantSetupSummaryResponse> {
+    return this.http.post<TenantSetupSummaryResponse>(`${this.base}/current/features/${featureId}`, {});
+  }
+
+  removeCurrentFeature(featureId: string): Observable<TenantSetupSummaryResponse> {
+    return this.http.delete<TenantSetupSummaryResponse>(`${this.base}/current/features/${featureId}`);
+  }
+
+  getFeatureCatalog(): Observable<FeatureCatalogItemResponse[]> {
+    return this.http.get<FeatureCatalogItemResponse[]>(`${this.base}/features/catalog`);
+  }
+
+  createFeatureCatalogItem(req: CreateFeatureCatalogItemRequest): Observable<FeatureCatalogItemResponse> {
+    return this.http.post<FeatureCatalogItemResponse>(`${this.base}/features/catalog`, req);
+  }
+
+  updateFeatureCatalogItem(featureId: string, req: UpdateFeatureCatalogItemRequest): Observable<FeatureCatalogItemResponse> {
+    return this.http.put<FeatureCatalogItemResponse>(`${this.base}/features/catalog/${featureId}`, req);
   }
 }

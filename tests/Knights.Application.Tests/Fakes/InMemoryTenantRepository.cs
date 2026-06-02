@@ -6,6 +6,7 @@ namespace Knights.Application.Tests.Fakes;
 public sealed class InMemoryTenantRepository : ITenantRepository
 {
     private readonly Dictionary<Guid, Tenant> _tenants = [];
+    private readonly Dictionary<Guid, FeatureCatalogItem> _catalog = [];
 
     public Task<IReadOnlyCollection<Tenant>> GetAllAsync(CancellationToken ct = default)
     {
@@ -26,6 +27,28 @@ public sealed class InMemoryTenantRepository : ITenantRepository
         return Task.FromResult(match);
     }
 
+    public Task<IReadOnlyCollection<FeatureCatalogItem>> GetCatalogFeaturesAsync(bool includeUnpublished, CancellationToken ct = default)
+    {
+        IReadOnlyCollection<FeatureCatalogItem> result = _catalog.Values
+            .Where(item => includeUnpublished || (item.IsPublished && !item.IsRetired))
+            .OrderBy(item => item.DisplayOrder)
+            .ThenBy(item => item.Name)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<FeatureCatalogItem?> GetCatalogFeatureByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        _catalog.TryGetValue(id, out var feature);
+        return Task.FromResult(feature);
+    }
+
+    public Task<FeatureCatalogItem?> GetCatalogFeatureByKeyAsync(string key, CancellationToken ct = default)
+    {
+        var match = _catalog.Values.FirstOrDefault(item => string.Equals(item.Key, key.Trim(), StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(match);
+    }
+
     public Task AddAsync(Tenant tenant, CancellationToken ct = default)
     {
         _tenants[tenant.Id] = tenant;
@@ -35,6 +58,18 @@ public sealed class InMemoryTenantRepository : ITenantRepository
     public Task UpdateAsync(Tenant tenant, CancellationToken ct = default)
     {
         _tenants[tenant.Id] = tenant;
+        return Task.CompletedTask;
+    }
+
+    public Task AddCatalogFeatureAsync(FeatureCatalogItem feature, CancellationToken ct = default)
+    {
+        _catalog[feature.Id] = feature;
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateCatalogFeatureAsync(FeatureCatalogItem feature, CancellationToken ct = default)
+    {
+        _catalog[feature.Id] = feature;
         return Task.CompletedTask;
     }
 }

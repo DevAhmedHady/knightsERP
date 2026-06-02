@@ -12,6 +12,8 @@ public sealed class TenantRepository(KnightsDbContext dbContext) : ITenantReposi
             .AsNoTracking()
             .Include(t => t.TenantRoles)
             .Include(t => t.TenantPermissions)
+            .Include(t => t.TenantFeatureSelections)
+            .ThenInclude(selection => selection.FeatureCatalogItem)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
     }
@@ -21,6 +23,8 @@ public sealed class TenantRepository(KnightsDbContext dbContext) : ITenantReposi
         return await dbContext.Tenants
             .Include(t => t.TenantRoles)
             .Include(t => t.TenantPermissions)
+            .Include(t => t.TenantFeatureSelections)
+            .ThenInclude(selection => selection.FeatureCatalogItem)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
 
@@ -30,7 +34,29 @@ public sealed class TenantRepository(KnightsDbContext dbContext) : ITenantReposi
         return await dbContext.Tenants
             .Include(t => t.TenantRoles)
             .Include(t => t.TenantPermissions)
+            .Include(t => t.TenantFeatureSelections)
+            .ThenInclude(selection => selection.FeatureCatalogItem)
             .FirstOrDefaultAsync(t => t.CodeName == normalized, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<FeatureCatalogItem>> GetCatalogFeaturesAsync(bool includeUnpublished, CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.FeatureCatalogItems.AsNoTracking().OrderBy(item => item.DisplayOrder).ThenBy(item => item.Name);
+        if (!includeUnpublished)
+            query = query.Where(item => item.IsPublished && !item.IsRetired).OrderBy(item => item.DisplayOrder).ThenBy(item => item.Name);
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public Task<FeatureCatalogItem?> GetCatalogFeatureByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return dbContext.FeatureCatalogItems.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+    }
+
+    public Task<FeatureCatalogItem?> GetCatalogFeatureByKeyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        var normalized = key.Trim().ToUpperInvariant();
+        return dbContext.FeatureCatalogItems.FirstOrDefaultAsync(item => item.Key == normalized, cancellationToken);
     }
 
     public async Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
@@ -42,6 +68,18 @@ public sealed class TenantRepository(KnightsDbContext dbContext) : ITenantReposi
     public async Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
         dbContext.Tenants.Update(tenant);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddCatalogFeatureAsync(FeatureCatalogItem feature, CancellationToken cancellationToken = default)
+    {
+        await dbContext.FeatureCatalogItems.AddAsync(feature, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateCatalogFeatureAsync(FeatureCatalogItem feature, CancellationToken cancellationToken = default)
+    {
+        dbContext.FeatureCatalogItems.Update(feature);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

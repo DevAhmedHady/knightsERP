@@ -5,8 +5,13 @@ public sealed record TenantResponse(
     string CodeName,
     string Name,
     string Description,
+    string EnvironmentDisplayName,
+    string ThemeKey,
+    string WorldDescription,
     bool IsActive,
     DateTime? ExpiryDate,
     Guid OwnerId,
+    DateTime? SetupStartedAt,
+    DateTime? SetupCompletedAt,
     IReadOnlyCollection<Guid> RoleIds,
     IReadOnlyCollection<Guid> PermissionIds);

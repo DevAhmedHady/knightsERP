@@ -8,12 +8,13 @@ namespace Knights.Application.Tests;
 public class TenantServiceTests
 {
     private readonly FakePasswordHasher _hasher = new();
+    private readonly FakeTenantContext _tenantContext = new();
 
     private (TenantService Service, InMemoryTenantRepository TenantRepo, InMemoryUserRepository UserRepo) CreateService()
     {
         var tenantRepo = new InMemoryTenantRepository();
         var userRepo = new InMemoryUserRepository();
-        var service = new TenantService(tenantRepo, userRepo);
+        var service = new TenantService(tenantRepo, userRepo, _tenantContext);
         return (service, tenantRepo, userRepo);
     }
 
@@ -173,5 +174,74 @@ public class TenantServiceTests
         var result = await service.GetAllAsync();
 
         Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetCurrentSetupAsync_ReturnsProgressAndUnlocksAtFiftyPercent()
+    {
+        var (service, _, _) = CreateService();
+        var tenant = await service.CreateAsync(MakeCreateRequest("omega"));
+        _tenantContext.TenantId = tenant.Id;
+
+        await service.ConfigureCurrentEnvironmentAsync(new ConfigureTenantEnvironmentRequest("Omega HQ", "nightwatch", "Operations world"));
+        await service.AssignRoleAsync(tenant.Id, Guid.NewGuid());
+
+        var summary = await service.GetCurrentSetupAsync();
+
+        Assert.Equal(75, summary.ProgressPercent);
+        Assert.True(summary.IsUnlocked);
+        Assert.False(summary.IsComplete);
+    }
+
+    [Fact]
+    public async Task SelectCurrentFeatureAsync_RequiresDependencies()
+    {
+        var (service, _, _) = CreateService();
+        var tenant = await service.CreateAsync(MakeCreateRequest("gamma"));
+
+        var baseFeature = await service.CreateCatalogFeatureAsync(new CreateFeatureCatalogItemRequest(
+            "BASE_WORLD",
+            "Base World",
+            "Base module",
+            "Foundation",
+            [],
+            1,
+            true));
+
+        _tenantContext.TenantId = null;
+        var dependent = await service.CreateCatalogFeatureAsync(new CreateFeatureCatalogItemRequest(
+            "EVENTS",
+            "Events",
+            "Event engine",
+            "Gameplay",
+            ["BASE_WORLD"],
+            2,
+            true));
+
+        _tenantContext.TenantId = tenant.Id;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SelectCurrentFeatureAsync(dependent.Id));
+
+        await service.SelectCurrentFeatureAsync(baseFeature.Id);
+        var summary = await service.SelectCurrentFeatureAsync(dependent.Id);
+
+        Assert.Equal(2, summary.SelectedFeatures.Count);
+    }
+
+    [Fact]
+    public async Task CreateCatalogFeatureAsync_RequiresSystemAdmin()
+    {
+        var (service, _, _) = CreateService();
+        var tenant = await service.CreateAsync(MakeCreateRequest("delta"));
+        _tenantContext.TenantId = tenant.Id;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateCatalogFeatureAsync(new CreateFeatureCatalogItemRequest(
+            "OPS",
+            "Ops",
+            "Ops module",
+            "Foundation",
+            [],
+            1,
+            true)));
     }
 }

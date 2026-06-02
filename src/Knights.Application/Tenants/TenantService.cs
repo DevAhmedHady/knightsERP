@@ -9,8 +9,11 @@ namespace Knights.Application.Tenants;
 
 public sealed class TenantService(
     ITenantRepository tenantRepository,
-    IUserRepository userRepository) : ITenantService
+    IUserRepository userRepository,
+    ITenantContext tenantContext) : ITenantService
 {
+    private const int UnlockThresholdPercent = 50;
+
     static TenantService()
     {
         MapsterConfig.Register();
@@ -20,25 +23,25 @@ public sealed class TenantService(
     {
         var tenant = Tenant.Create(request.CodeName, request.Name, request.Description, request.OwnerId, request.ExpiryDate);
         await tenantRepository.AddAsync(tenant, ct);
-        return tenant.Adapt<TenantResponse>();
+        return MapTenantResponse(tenant);
     }
 
     public async Task<IReadOnlyCollection<TenantResponse>> GetAllAsync(CancellationToken ct = default)
     {
         var tenants = await tenantRepository.GetAllAsync(ct);
-        return tenants.Adapt<IReadOnlyCollection<TenantResponse>>();
+        return tenants.Select(MapTenantResponse).ToList();
     }
 
     public async Task<TenantResponse?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var tenant = await tenantRepository.GetByIdAsync(id, ct);
-        return tenant?.Adapt<TenantResponse>();
+        return tenant is null ? null : MapTenantResponse(tenant);
     }
 
     public async Task<TenantResponse?> GetByCodeNameAsync(string codeName, CancellationToken ct = default)
     {
         var tenant = await tenantRepository.GetByCodeNameAsync(codeName, ct);
-        return tenant?.Adapt<TenantResponse>();
+        return tenant is null ? null : MapTenantResponse(tenant);
     }
 
     public async Task UpdateAsync(Guid id, UpdateTenantRequest request, CancellationToken ct = default)
@@ -104,9 +107,252 @@ public sealed class TenantService(
         await userRepository.UpdateAsync(user, ct);
     }
 
+    public async Task<TenantSetupSummaryResponse> GetCurrentSetupAsync(CancellationToken ct = default)
+    {
+        var tenant = await GetCurrentTenantAsync(ct);
+        var availableFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: false, ct);
+        return BuildSetupSummary(tenant, availableFeatures);
+    }
+
+    public async Task<TenantSetupSummaryResponse> ConfigureCurrentEnvironmentAsync(ConfigureTenantEnvironmentRequest request, CancellationToken ct = default)
+    {
+        var tenant = await GetCurrentTenantAsync(ct);
+        tenant.ConfigureEnvironment(request.EnvironmentDisplayName, request.ThemeKey, request.WorldDescription);
+
+        var availableFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: false, ct);
+        tenant.SyncSetupCompletion(CalculateProgressPercent(tenant));
+        await tenantRepository.UpdateAsync(tenant, ct);
+        return BuildSetupSummary(tenant, availableFeatures);
+    }
+
+    public async Task<TenantSetupSummaryResponse> SelectCurrentFeatureAsync(Guid featureId, CancellationToken ct = default)
+    {
+        var tenant = await GetCurrentTenantAsync(ct);
+        var feature = await tenantRepository.GetCatalogFeatureByIdAsync(featureId, ct)
+            ?? throw new InvalidOperationException($"Feature '{featureId}' was not found.");
+
+        if (!feature.IsPublished || feature.IsRetired)
+            throw new InvalidOperationException("Feature is not currently available for tenant selection.");
+
+        var catalogFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: true, ct);
+        var selectedKeys = tenant.TenantFeatureSelections
+            .Select(selection => catalogFeatures.FirstOrDefault(item => item.Id == selection.FeatureCatalogItemId)?.Key)
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var missingDependencies = feature.DependencyKeys
+            .Where(key => !selectedKeys.Contains(key))
+            .ToArray();
+
+        if (missingDependencies.Length > 0)
+            throw new InvalidOperationException($"Feature '{feature.Key}' requires: {string.Join(", ", missingDependencies)}.");
+
+        tenant.SelectFeature(feature.Id);
+        tenant.SyncSetupCompletion(CalculateProgressPercent(tenant));
+        await tenantRepository.UpdateAsync(tenant, ct);
+
+        var availableFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: false, ct);
+        var refreshed = await GetRequiredTenantAsync(tenant.Id, ct);
+        return BuildSetupSummary(refreshed, availableFeatures);
+    }
+
+    public async Task<TenantSetupSummaryResponse> RemoveCurrentFeatureAsync(Guid featureId, CancellationToken ct = default)
+    {
+        var tenant = await GetCurrentTenantAsync(ct);
+        var feature = await tenantRepository.GetCatalogFeatureByIdAsync(featureId, ct)
+            ?? throw new InvalidOperationException($"Feature '{featureId}' was not found.");
+
+        var blockingDependents = tenant.TenantFeatureSelections
+            .Select(selection => selection.FeatureCatalogItem)
+            .Where(item => item is not null && item.DependencyKeys.Contains(feature.Key, StringComparer.OrdinalIgnoreCase))
+            .Select(item => item!.Key)
+            .ToArray();
+
+        if (blockingDependents.Length > 0)
+            throw new InvalidOperationException($"Feature '{feature.Key}' is required by: {string.Join(", ", blockingDependents)}.");
+
+        tenant.RemoveFeature(feature.Id);
+        tenant.SyncSetupCompletion(CalculateProgressPercent(tenant));
+        await tenantRepository.UpdateAsync(tenant, ct);
+
+        var availableFeatures = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: false, ct);
+        var refreshed = await GetRequiredTenantAsync(tenant.Id, ct);
+        return BuildSetupSummary(refreshed, availableFeatures);
+    }
+
+    public async Task<IReadOnlyCollection<FeatureCatalogItemResponse>> GetCatalogAsync(CancellationToken ct = default)
+    {
+        var features = await tenantRepository.GetCatalogFeaturesAsync(includeUnpublished: IsSystemAdmin, ct);
+        return features.Select(MapFeature).ToList();
+    }
+
+    public async Task<FeatureCatalogItemResponse> CreateCatalogFeatureAsync(CreateFeatureCatalogItemRequest request, CancellationToken ct = default)
+    {
+        EnsureSystemAdmin();
+
+        var existing = await tenantRepository.GetCatalogFeatureByKeyAsync(request.Key, ct);
+        if (existing is not null)
+            throw new InvalidOperationException($"Feature key '{request.Key}' already exists.");
+
+        ValidateDependencyLoop(request.Key, request.DependencyKeys);
+
+        var feature = FeatureCatalogItem.Create(
+            request.Key,
+            request.Name,
+            request.Description,
+            request.Category,
+            request.DependencyKeys,
+            request.DisplayOrder,
+            request.IsPublished);
+
+        await tenantRepository.AddCatalogFeatureAsync(feature, ct);
+        return MapFeature(feature);
+    }
+
+    public async Task<FeatureCatalogItemResponse> UpdateCatalogFeatureAsync(Guid featureId, UpdateFeatureCatalogItemRequest request, CancellationToken ct = default)
+    {
+        EnsureSystemAdmin();
+
+        var feature = await tenantRepository.GetCatalogFeatureByIdAsync(featureId, ct)
+            ?? throw new InvalidOperationException($"Feature '{featureId}' was not found.");
+
+        ValidateDependencyLoop(feature.Key, request.DependencyKeys);
+
+        feature.Update(
+            request.Name,
+            request.Description,
+            request.Category,
+            request.DependencyKeys,
+            request.DisplayOrder,
+            request.IsPublished,
+            request.IsRetired);
+
+        await tenantRepository.UpdateCatalogFeatureAsync(feature, ct);
+        return MapFeature(feature);
+    }
+
     private async Task<Tenant> GetRequiredTenantAsync(Guid id, CancellationToken ct)
     {
         var tenant = await tenantRepository.GetByIdAsync(id, ct);
         return tenant ?? throw new InvalidOperationException($"Tenant '{id}' was not found.");
+    }
+
+    private async Task<Tenant> GetCurrentTenantAsync(CancellationToken ct)
+    {
+        if (!tenantContext.TenantId.HasValue)
+            throw new InvalidOperationException("Current request is not tenant-scoped.");
+
+        return await GetRequiredTenantAsync(tenantContext.TenantId.Value, ct);
+    }
+
+    private bool IsSystemAdmin => !tenantContext.TenantId.HasValue;
+
+    private void EnsureSystemAdmin()
+    {
+        if (!IsSystemAdmin)
+            throw new InvalidOperationException("Only system admins can manage the feature catalog.");
+    }
+
+    private static void ValidateDependencyLoop(string key, IEnumerable<string> dependencyKeys)
+    {
+        var normalized = key.Trim().ToUpperInvariant();
+        if (dependencyKeys.Any(value => string.Equals(value.Trim(), normalized, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException($"Feature '{normalized}' cannot depend on itself.");
+    }
+
+    private static TenantResponse MapTenantResponse(Tenant tenant)
+    {
+        return new TenantResponse(
+            tenant.Id,
+            tenant.CodeName,
+            tenant.Name,
+            tenant.Description,
+            tenant.EnvironmentDisplayName,
+            tenant.ThemeKey,
+            tenant.WorldDescription,
+            tenant.IsActive,
+            tenant.ExpiryDate,
+            tenant.OwnerId,
+            tenant.SetupStartedAt,
+            tenant.SetupCompletedAt,
+            tenant.TenantRoles.Select(role => role.RoleId).ToList(),
+            tenant.TenantPermissions.Select(permission => permission.PermissionId).ToList());
+    }
+
+    private static FeatureCatalogItemResponse MapFeature(FeatureCatalogItem feature)
+    {
+        return new FeatureCatalogItemResponse(
+            feature.Id,
+            feature.Key,
+            feature.Name,
+            feature.Description,
+            feature.Category,
+            feature.DependencyKeys.ToArray(),
+            feature.DisplayOrder,
+            feature.IsPublished,
+            feature.IsRetired);
+    }
+
+    private static int CalculateProgressPercent(Tenant tenant)
+    {
+        var completedSteps = GetSteps(tenant).Count(step => step.IsCompleted);
+        return completedSteps * 25;
+    }
+
+    private static IReadOnlyCollection<TenantSetupStepResponse> GetSteps(Tenant tenant)
+    {
+        return
+        [
+            new TenantSetupStepResponse(
+                "environment-profile",
+                "Configure environment identity",
+                !string.IsNullOrWhiteSpace(tenant.EnvironmentDisplayName) && !string.IsNullOrWhiteSpace(tenant.ThemeKey),
+                true),
+            new TenantSetupStepResponse(
+                "world-description",
+                "Describe world and workspace rules",
+                !string.IsNullOrWhiteSpace(tenant.WorldDescription),
+                true),
+            new TenantSetupStepResponse(
+                "access-model",
+                "Assign at least one tenant role or permission",
+                tenant.TenantRoles.Count > 0 || tenant.TenantPermissions.Count > 0,
+                true),
+            new TenantSetupStepResponse(
+                "feature-selection",
+                "Select at least one published feature",
+                tenant.TenantFeatureSelections.Count > 0,
+                true)
+        ];
+    }
+
+    private static TenantSetupSummaryResponse BuildSetupSummary(Tenant tenant, IReadOnlyCollection<FeatureCatalogItem> availableFeatures)
+    {
+        var steps = GetSteps(tenant);
+        var progressPercent = steps.Count(step => step.IsCompleted) * 25;
+        tenant.SyncSetupCompletion(progressPercent);
+
+        var featureLookup = availableFeatures.ToDictionary(feature => feature.Id, feature => feature);
+        foreach (var selectionFeature in tenant.TenantFeatureSelections.Select(selection => selection.FeatureCatalogItem).Where(feature => feature is not null))
+            featureLookup[selectionFeature!.Id] = selectionFeature;
+
+        var selectedFeatures = tenant.TenantFeatureSelections
+            .Select(selection => featureLookup.GetValueOrDefault(selection.FeatureCatalogItemId))
+            .Where(feature => feature is not null)
+            .Select(feature => MapFeature(feature!))
+            .ToList();
+
+        return new TenantSetupSummaryResponse(
+            tenant.Id,
+            tenant.Name,
+            tenant.EnvironmentDisplayName,
+            tenant.ThemeKey,
+            tenant.WorldDescription,
+            progressPercent,
+            progressPercent >= UnlockThresholdPercent,
+            progressPercent >= 100,
+            steps,
+            availableFeatures.Select(MapFeature).ToList(),
+            selectedFeatures);
     }
 }

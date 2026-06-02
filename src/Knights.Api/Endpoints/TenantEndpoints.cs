@@ -20,6 +20,13 @@ public static class TenantEndpoints
         group.MapDelete("/{id:guid}/permissions/{permissionId:guid}", RevokePermissionAsync).WithName("RevokeTenantPermission");
         group.MapPost("/{id:guid}/members/{userId:guid}", AddMemberAsync).WithName("AddTenantMember");
         group.MapDelete("/{id:guid}/members/{userId:guid}", RemoveMemberAsync).WithName("RemoveTenantMember");
+        group.MapGet("/current/setup", GetCurrentSetupAsync).WithName("GetCurrentTenantSetup");
+        group.MapPut("/current/environment", ConfigureCurrentEnvironmentAsync).WithName("ConfigureCurrentTenantEnvironment");
+        group.MapPost("/current/features/{featureId:guid}", SelectCurrentFeatureAsync).WithName("SelectCurrentTenantFeature");
+        group.MapDelete("/current/features/{featureId:guid}", RemoveCurrentFeatureAsync).WithName("RemoveCurrentTenantFeature");
+        group.MapGet("/features/catalog", GetFeatureCatalogAsync).WithName("GetFeatureCatalog");
+        group.MapPost("/features/catalog", CreateFeatureCatalogAsync).WithName("CreateFeatureCatalogItem");
+        group.MapPut("/features/catalog/{featureId:guid}", UpdateFeatureCatalogAsync).WithName("UpdateFeatureCatalogItem");
 
         return app;
     }
@@ -167,6 +174,110 @@ public static class TenantEndpoints
         catch (InvalidOperationException)
         {
             return Results.NotFound();
+        }
+    }
+
+    private static async Task<IResult> GetCurrentSetupAsync(
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await tenantService.GetCurrentSetupAsync(cancellationToken);
+            return Results.Ok(summary);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> ConfigureCurrentEnvironmentAsync(
+        ConfigureTenantEnvironmentRequest request,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await tenantService.ConfigureCurrentEnvironmentAsync(request, cancellationToken);
+            return Results.Ok(summary);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> SelectCurrentFeatureAsync(
+        Guid featureId,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await tenantService.SelectCurrentFeatureAsync(featureId, cancellationToken);
+            return Results.Ok(summary);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> RemoveCurrentFeatureAsync(
+        Guid featureId,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await tenantService.RemoveCurrentFeatureAsync(featureId, cancellationToken);
+            return Results.Ok(summary);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> GetFeatureCatalogAsync(
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        var features = await tenantService.GetCatalogAsync(cancellationToken);
+        return Results.Ok(features);
+    }
+
+    private static async Task<IResult> CreateFeatureCatalogAsync(
+        CreateFeatureCatalogItemRequest request,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var feature = await tenantService.CreateCatalogFeatureAsync(request, cancellationToken);
+            return Results.Created($"/api/tenants/features/catalog/{feature.Id}", feature);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+    }
+
+    private static async Task<IResult> UpdateFeatureCatalogAsync(
+        Guid featureId,
+        UpdateFeatureCatalogItemRequest request,
+        ITenantService tenantService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var feature = await tenantService.UpdateCatalogFeatureAsync(featureId, request, cancellationToken);
+            return Results.Ok(feature);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
         }
     }
 }

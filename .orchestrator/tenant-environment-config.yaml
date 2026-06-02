@@ -1,0 +1,58 @@
+models:
+  planner_reviewer:
+    provider: codex_cli
+    model_complex: gpt-5.5
+    model_simple: gpt-5.5
+    reasoning_effort: medium
+    sandbox: read-only
+
+  fullstack_dev:
+    provider: codex_cli
+    model_complex: gpt-5.5
+    model_simple: gpt-5.4
+    reasoning_effort: medium
+    sandbox: read-only
+
+  db_dev:
+    provider: codex_cli
+    model_complex: gpt-5.4
+    model_simple: gpt-5.4
+    reasoning_effort: medium
+    sandbox: read-only
+
+  business_writer:
+    provider: codex_cli
+    model_complex: gpt-5.4
+    model_simple: gpt-5.4
+    reasoning_effort: medium
+    sandbox: read-only
+
+budgets:
+  planner_reviewer: 14000
+  fullstack_dev: 10000
+  db_dev: 8000
+  business_writer: 8000
+  compress_history_over: 6000
+
+communication:
+  caveman: ultra
+  max_reasoning: medium
+
+quality:
+  coverage_threshold: 0.85
+  max_rounds: 6
+  max_revisions_per_task: 3
+
+repo:
+  path: ./
+  test_cmd: "dotnet test Knights.slnx --no-restore --verbosity minimal"
+  coverage_cmd: "powershell -NoProfile -Command \"$ErrorActionPreference='Stop'; dotnet test Knights.slnx --no-restore --collect:'XPlat Code Coverage' --verbosity minimal; $file = Get-ChildItem -Recurse -Filter coverage.cobertura.xml | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if (-not $file) { Write-Output 'TOTAL 0%'; exit 1 }; [xml]$xml = Get-Content $file.FullName; $pct = [math]::Round(([double]$xml.coverage.'line-rate') * 100, 2); Write-Output ('TOTAL ' + $pct + '%')\""
+  coverage_regex: "TOTAL\\s+(\\d+(?:\\.\\d+)?)%"
+
+docs:
+  plans_dir: docs/plans
+  technical_debts_dir: docs/technical-debts
+  delivery_dir: docs/delivery
+
+logging:
+  trace_file: ./.orchestrator/tenant-environment-trace.jsonl

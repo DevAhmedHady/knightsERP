@@ -23,6 +23,8 @@ public sealed class KnightsDbContext(
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantRole> TenantRoles => Set<TenantRole>();
     public DbSet<TenantPermission> TenantPermissions => Set<TenantPermission>();
+    public DbSet<FeatureCatalogItem> FeatureCatalogItems => Set<FeatureCatalogItem>();
+    public DbSet<TenantFeatureSelection> TenantFeatureSelections => Set<TenantFeatureSelection>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

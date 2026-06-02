@@ -14,7 +14,6 @@ models:
     model_complex: gpt-5.5
     model_simple: gpt-5.4
     reasoning_effort: medium
-    sandbox: read-only            # read-only: Codex returns a diff; the controller applies it
 
   # Senior DB dev — Claude CLI.
   db_dev:

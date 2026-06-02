@@ -7,6 +7,7 @@ public class Tenant : AuditedEntity
 {
     private readonly List<TenantRole> _roles = [];
     private readonly List<TenantPermission> _permissions = [];
+    private readonly List<TenantFeatureSelection> _featureSelections = [];
 
     private Tenant()
     {
@@ -15,12 +16,18 @@ public class Tenant : AuditedEntity
     public string CodeName { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
+    public string EnvironmentDisplayName { get; private set; } = string.Empty;
+    public string ThemeKey { get; private set; } = string.Empty;
+    public string WorldDescription { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
     public DateTime? ExpiryDate { get; private set; }
+    public DateTime? SetupStartedAt { get; private set; }
+    public DateTime? SetupCompletedAt { get; private set; }
     public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
     public Guid OwnerId { get; private set; }
     public IReadOnlyCollection<TenantRole> TenantRoles => _roles.AsReadOnly();
     public IReadOnlyCollection<TenantPermission> TenantPermissions => _permissions.AsReadOnly();
+    public IReadOnlyCollection<TenantFeatureSelection> TenantFeatureSelections => _featureSelections.AsReadOnly();
 
     public static Tenant Create(string codeName, string name, string description, Guid ownerId, DateTime? expiryDate = null, Guid? id = null)
     {
@@ -34,7 +41,8 @@ public class Tenant : AuditedEntity
             Description = description.Trim(),
             IsActive = true,
             OwnerId = ownerId,
-            ExpiryDate = expiryDate
+            ExpiryDate = expiryDate,
+            SetupStartedAt = DateTime.UtcNow
         };
     }
 
@@ -51,6 +59,17 @@ public class Tenant : AuditedEntity
     public void SetActive(bool isActive)
     {
         IsActive = isActive;
+    }
+
+    public void ConfigureEnvironment(string environmentDisplayName, string themeKey, string worldDescription)
+    {
+        ValidationRules.IsNotNullOrWhiteSpace(nameof(EnvironmentDisplayName), environmentDisplayName);
+        ValidationRules.IsNotNullOrWhiteSpace(nameof(ThemeKey), themeKey);
+
+        EnvironmentDisplayName = environmentDisplayName.Trim();
+        ThemeKey = themeKey.Trim();
+        WorldDescription = worldDescription.Trim();
+        SetupStartedAt ??= DateTime.UtcNow;
     }
 
     public TenantRole AssignRole(Guid roleId)
@@ -91,6 +110,37 @@ public class Tenant : AuditedEntity
         _permissions.RemoveAll(p => p.PermissionId == permissionId);
     }
 
+    public TenantFeatureSelection SelectFeature(Guid featureCatalogItemId)
+    {
+        ValidationRules.IsNotEmpty(nameof(featureCatalogItemId), featureCatalogItemId);
+
+        var existing = _featureSelections.FirstOrDefault(selection => selection.FeatureCatalogItemId == featureCatalogItemId);
+        if (existing is not null)
+            return existing;
+
+        var selection = TenantFeatureSelection.Create(Id, featureCatalogItemId);
+        _featureSelections.Add(selection);
+        SetupStartedAt ??= DateTime.UtcNow;
+        return selection;
+    }
+
+    public void RemoveFeature(Guid featureCatalogItemId)
+    {
+        ValidationRules.IsNotEmpty(nameof(featureCatalogItemId), featureCatalogItemId);
+        _featureSelections.RemoveAll(selection => selection.FeatureCatalogItemId == featureCatalogItemId);
+    }
+
+    public void SyncSetupCompletion(int progressPercent)
+    {
+        if (progressPercent >= 100)
+        {
+            SetupCompletedAt ??= DateTime.UtcNow;
+            return;
+        }
+
+        SetupCompletedAt = null;
+    }
+
     public override bool Equals(BaseEntity? other)
     {
         if (other is not Tenant otherTenant)
@@ -100,6 +150,9 @@ public class Tenant : AuditedEntity
                CodeName == otherTenant.CodeName &&
                Name == otherTenant.Name &&
                Description == otherTenant.Description &&
+               EnvironmentDisplayName == otherTenant.EnvironmentDisplayName &&
+               ThemeKey == otherTenant.ThemeKey &&
+               WorldDescription == otherTenant.WorldDescription &&
                IsActive == otherTenant.IsActive &&
                ExpiryDate == otherTenant.ExpiryDate &&
                OwnerId == otherTenant.OwnerId;
