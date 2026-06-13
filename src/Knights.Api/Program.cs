@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Knights.Application;
 using Knights.Application.Common.Interfaces;
 using Knights.Domain.Exceptions;
@@ -15,7 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 const string DevelopmentCorsPolicy = "DevelopmentCorsPolicy";
 
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
@@ -88,6 +90,21 @@ app.Use(async (context, next) =>
             title = "Validation failed.",
             errors = exception.Errors
         });
+    }
+    catch (KeyNotFoundException exception)
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        await context.Response.WriteAsJsonAsync(new { title = exception.Message });
+    }
+    catch (ArgumentException exception)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsJsonAsync(new { title = exception.Message });
+    }
+    catch (UnauthorizedAccessException exception)
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsJsonAsync(new { title = exception.Message });
     }
 });
 

@@ -5,6 +5,7 @@ using Knights.Application.Permissions;
 using Knights.Application.Roles;
 using Knights.Application.Tenants;
 using Knights.Application.Users;
+using Knights.Application.Dashboards;
 
 namespace Knights.Application;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IPermissionService, PermissionService>();
 
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Knights.Application.Common.Interfaces;
 using Knights.Domain.Identity;
 using Knights.Domain.Tenants;
+using Knights.Domain.Dashboards;
 using Knights.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.Options;
 
@@ -26,11 +27,15 @@ public sealed class KnightsDbContext(
     public DbSet<FeatureCatalogItem> FeatureCatalogItems => Set<FeatureCatalogItem>();
     public DbSet<TenantFeatureSelection> TenantFeatureSelections => Set<TenantFeatureSelection>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<Dashboard> Dashboards => Set<Dashboard>();
+    public DbSet<DashboardWidget> DashboardWidgets => Set<DashboardWidget>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasQueryFilter(
             u => !u.IsDeleted && (_tenantContext.TenantId == null || u.TenantId == _tenantContext.TenantId));
+        modelBuilder.Entity<Dashboard>().HasQueryFilter(
+            dashboard => !dashboard.IsDeleted && (_tenantContext.TenantId == null || dashboard.TenantId == _tenantContext.TenantId));
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KnightsDbContext).Assembly);
         modelBuilder.ApplyDateTimeUtcOffsetConversions(_dateTimeOptions.LoadOffset);
