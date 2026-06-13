@@ -80,3 +80,4 @@ yarn-error.log*
 
 # Solution-specific
 .sln.iml
+.harness/runtime/

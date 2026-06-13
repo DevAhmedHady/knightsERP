@@ -48,9 +48,9 @@ quality:
 
 repo:
   path: ./
-  test_cmd: "pytest -q"
-  coverage_cmd: "pytest --cov --cov-report=term-missing"
-  coverage_regex: "TOTAL.*?(\\d+)%"
+  test_cmd: "dotnet test Knights.slnx --no-restore --verbosity minimal"
+  coverage_cmd: "powershell -NoProfile -Command \"$ErrorActionPreference='Stop'; dotnet test Knights.slnx --no-restore --collect:'XPlat Code Coverage' --verbosity minimal; $file = Get-ChildItem -Recurse -Filter coverage.cobertura.xml | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if (-not $file) { Write-Output 'TOTAL 0%'; exit 1 }; [xml]$xml = Get-Content $file.FullName; $pct = [math]::Round(([double]$xml.coverage.'line-rate') * 100, 2); Write-Output ('TOTAL ' + $pct + '%')\""
+  coverage_regex: "TOTAL\\s+(\\d+(?:\\.\\d+)?)%"
 
 # Markdown artifacts Opus must always persist (paths are relative to the repo).
 docs:
@@ -59,4 +59,4 @@ docs:
   delivery_dir: docs/delivery           # business docs written by Haiku
 
 logging:
-  trace_file: ./orchestrator_trace.jsonl
+  trace_file: C:/Users/AhmedHady/source/repos/Knights/.orchestrator/dashboard-widgets-trace.jsonl

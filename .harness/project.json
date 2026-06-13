@@ -1,0 +1,9 @@
+{
+  "skills": [],
+  "name": "Knights",
+  "workflow": "approval-driven",
+  "allowed_agents": [
+    "codex",
+    "claude"
+  ]
+}

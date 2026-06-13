@@ -69,3 +69,10 @@ Common:
 The first application service is `IUserService` / `UserService`, backed by the
 `IUserRepository` contract. It supports create, get, update, assign role, and grant
 permission workflows. Tests use an in-memory repository fake.
+
+<!-- hady:harness -->
+## Hady harness
+
+Task-specific context and selected skills are supplied by the harness at runtime.
+Follow `AGENTS.md` as the canonical contract; do not invent a parallel workflow
+or silently broaden the assigned task.
