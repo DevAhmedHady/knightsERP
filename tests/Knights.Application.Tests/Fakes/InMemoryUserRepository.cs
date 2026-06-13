@@ -47,4 +47,10 @@ public sealed class InMemoryUserRepository : IUserRepository
         UpdateCount++;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        _users.Remove(id);
+        return Task.CompletedTask;
+    }
 }

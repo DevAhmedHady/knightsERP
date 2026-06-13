@@ -10,6 +10,7 @@ public interface ITenantService
     Task<TenantResponse?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<TenantResponse?> GetByCodeNameAsync(string codeName, CancellationToken ct = default);
     Task UpdateAsync(Guid id, UpdateTenantRequest request, CancellationToken ct = default);
+    Task DeactivateAsync(Guid id, CancellationToken ct = default);
     Task AssignRoleAsync(Guid tenantId, Guid roleId, CancellationToken ct = default);
     Task RemoveRoleAsync(Guid tenantId, Guid roleId, CancellationToken ct = default);
     Task GrantPermissionAsync(Guid tenantId, Guid permissionId, CancellationToken ct = default);

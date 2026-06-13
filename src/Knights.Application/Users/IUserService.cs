@@ -11,4 +11,5 @@ public interface IUserService
     Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default);
     Task<UserResponse> AssignRoleAsync(Guid id, Guid roleId, CancellationToken cancellationToken = default);
     Task<UserResponse> GrantPermissionAsync(Guid id, Guid permissionId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -54,6 +54,13 @@ public sealed class TenantService(
         await tenantRepository.UpdateAsync(tenant, ct);
     }
 
+    public async Task DeactivateAsync(Guid id, CancellationToken ct = default)
+    {
+        var tenant = await GetRequiredTenantAsync(id, ct);
+        tenant.Deactivate();
+        await tenantRepository.UpdateAsync(tenant, ct);
+    }
+
     public async Task AssignRoleAsync(Guid tenantId, Guid roleId, CancellationToken ct = default)
     {
         var tenant = await GetRequiredTenantAsync(tenantId, ct);

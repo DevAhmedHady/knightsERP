@@ -1,5 +1,4 @@
 using System.Text;
-using Knights.Api.Endpoints;
 using Knights.Application;
 using Knights.Application.Common.Interfaces;
 using Knights.Domain.Exceptions;
@@ -16,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 const string DevelopmentCorsPolicy = "DevelopmentCorsPolicy";
 
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
@@ -37,14 +37,13 @@ builder.Services
         };
     });
 
-
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddCors(cors => cors.AddPolicy(DevelopmentCorsPolicy, policy => policy
         .WithOrigins("http://localhost:4200")
         .AllowAnyHeader()
         .AllowAnyMethod()));
-}// Need to handle the other environments
+}
 
 builder.Services.AddAuthorization();
 
@@ -66,7 +65,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-using(var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<KnightsDbContext>();
     await dbContext.Database.MigrateAsync();
@@ -95,10 +94,6 @@ app.Use(async (context, next) =>
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
     .WithName("Health");
 
-app.MapAuthEndpoints();
-app.MapUserEndpoints();
-app.MapRoleEndpoints();
-app.MapPermissionEndpoints();
-app.MapTenantEndpoints();
+app.MapControllers();
 
 app.Run();

@@ -1,10 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ChartModule } from 'primeng/chart';
-import { RoleService } from '../../core/services/role.service';
-import { PermissionService } from '../../core/services/permission.service';
+import { select, Store } from '@ngxs/store';
+import { LoadPermissions } from '../permissions/state/permissions.actions';
+import { LoadRoles } from '../roles/state/roles.actions';
+import { dashboardMetrics } from './dashboard.selectors';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,13 +14,13 @@ import { PermissionService } from '../../core/services/permission.service';
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
-  private roleService = inject(RoleService);
-  private permissionService = inject(PermissionService);
+  private store = inject(Store);
 
-  loading = signal(true);
-  totalRoles = signal(0);
-  activeRoles = signal(0);
-  totalPermissions = signal(0);
+  metrics = select(dashboardMetrics);
+  loading = computed(() => this.metrics().loading);
+  totalRoles = computed(() => this.metrics().totalRoles);
+  activeRoles = computed(() => this.metrics().activeRoles);
+  totalPermissions = computed(() => this.metrics().totalPermissions);
   coverageScore = computed(() => {
     const total = this.totalRoles() + this.totalPermissions();
     if (total === 0) {
@@ -30,7 +31,15 @@ export class DashboardComponent implements OnInit {
   });
   inactiveRoles = computed(() => Math.max(0, this.totalRoles() - this.activeRoles()));
 
-  chartData = signal<any>(null);
+  chartData = computed(() => ({
+    labels: ['Active', 'Inactive'],
+    datasets: [{
+      data: [this.activeRoles(), this.inactiveRoles()],
+      backgroundColor: ['#0f7d5c', '#d97706'],
+      hoverBackgroundColor: ['#138a61', '#b45309'],
+      borderWidth: 0
+    }]
+  }));
   chartOptions = signal<any>({
     responsive: true,
     maintainAspectRatio: true,
@@ -42,29 +51,6 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    forkJoin({
-      roles: this.roleService.getAll(),
-      permissions: this.permissionService.getAll()
-    }).subscribe({
-      next: ({ roles, permissions }) => {
-        this.totalRoles.set(roles.length);
-        this.activeRoles.set(roles.filter(r => r.isActive).length);
-        this.totalPermissions.set(permissions.length);
-
-        const active = roles.filter(r => r.isActive).length;
-        const inactive = roles.length - active;
-        this.chartData.set({
-          labels: ['Active', 'Inactive'],
-          datasets: [{
-            data: [active, inactive],
-            backgroundColor: ['#0f7d5c', '#d97706'],
-            hoverBackgroundColor: ['#138a61', '#b45309'],
-            borderWidth: 0
-          }]
-        });
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false)
-    });
+    this.store.dispatch([new LoadRoles(), new LoadPermissions()]);
   }
 }

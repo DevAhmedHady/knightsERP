@@ -38,7 +38,6 @@ public sealed class AuthService(
 
         if (!user.IsSystemAdmin)
         {
-            // Tenant users must provide a valid TenantCodeName matching their tenant
             if (string.IsNullOrWhiteSpace(request.TenantCodeName))
                 return null;
 

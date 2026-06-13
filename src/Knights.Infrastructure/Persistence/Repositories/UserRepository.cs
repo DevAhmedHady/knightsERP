@@ -53,4 +53,15 @@ public sealed class UserRepository(KnightsDbContext dbContext) : IUserRepository
         dbContext.Users.Update(user);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+        if (user is null)
+            return;
+
+        user.MarkAsDeleted("system");
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

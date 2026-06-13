@@ -3,22 +3,15 @@ using Microsoft.AspNetCore.Http;
 
 namespace Knights.Infrastructure.Security;
 
-public sealed class HttpTenantContext : ITenantContext
+public sealed class HttpTenantContext(IHttpContextAccessor httpContextAccessor) : ITenantContext
 {
     private const string TenantIdClaimType = "tenant_id";
-
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public HttpTenantContext(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
 
     public Guid? TenantId
     {
         get
         {
-            var tenantIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(TenantIdClaimType)?.Value;
+            var tenantIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(TenantIdClaimType)?.Value;
 
             return Guid.TryParse(tenantIdClaim, out var tenantId)
                 ? tenantId

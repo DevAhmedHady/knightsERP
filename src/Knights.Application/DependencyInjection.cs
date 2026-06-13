@@ -15,9 +15,13 @@ public static class DependencyInjection
         MapsterConfig.Register();
 
         services.AddScoped<IAuthService, AuthService>();
+
         services.AddScoped<IUserService, UserService>();
+
         services.AddScoped<IRoleService, RoleService>();
+
         services.AddScoped<IPermissionService, PermissionService>();
+
         services.AddScoped<ITenantService, TenantService>();
 
         return services;

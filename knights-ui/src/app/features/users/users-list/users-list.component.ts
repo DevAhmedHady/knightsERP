@@ -9,8 +9,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { UserService } from '../../../core/services/user.service';
+import { select, Store } from '@ngxs/store';
 import { UserResponse } from '../../../core/models/user.model';
+import { CreateUser, DeleteUser, LoadUsers, UpdateUser } from '../state/users.actions';
+import { UsersState } from '../state/users.state';
 
 @Component({
   selector: 'app-users-list',
@@ -24,13 +26,13 @@ import { UserResponse } from '../../../core/models/user.model';
   templateUrl: './users-list.component.html'
 })
 export class UsersListComponent implements OnInit {
-  private userService = inject(UserService);
+  private store = inject(Store);
   private fb = inject(FormBuilder);
   private confirmSvc = inject(ConfirmationService);
   private msgSvc = inject(MessageService);
 
-  users = signal<UserResponse[]>([]);
-  loading = signal(true);
+  users = select(UsersState.items);
+  loading = select(UsersState.loading);
   dialogVisible = signal(false);
   editingId = signal<string | null>(null);
   searchValue = '';
@@ -49,15 +51,8 @@ export class UsersListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.userService.getAll().subscribe({
-      next: users => {
-        this.users.set(users);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
-      }
+    this.store.dispatch(new LoadUsers()).subscribe({
+      error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' })
     });
   }
 
@@ -78,8 +73,8 @@ export class UsersListComponent implements OnInit {
     const val = this.form.getRawValue();
     const id = this.editingId();
 
-    const obs = id
-      ? this.userService.update(id, {
+    const action = id
+      ? new UpdateUser(id, {
           firstName: val.firstName!,
           midName: val.midName ?? undefined,
           lastName: val.lastName!,
@@ -88,7 +83,7 @@ export class UsersListComponent implements OnInit {
           isEmailConfirmed: val.isEmailConfirmed ?? false,
           sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
         })
-      : this.userService.create({
+      : new CreateUser({
           firstName: val.firstName!,
           midName: val.midName ?? undefined,
           lastName: val.lastName!,
@@ -99,13 +94,8 @@ export class UsersListComponent implements OnInit {
           sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
         });
 
-    obs.subscribe({
-      next: (saved) => {
-        if (id) {
-          this.users.update(list => list.map(u => u.id === id ? saved : u));
-        } else {
-          this.users.update(list => [saved, ...list]);
-        }
+    this.store.dispatch(action).subscribe({
+      next: () => {
         this.msgSvc.add({ severity: 'success', summary: id ? 'Updated' : 'Created', detail: 'User saved.' });
         this.dialogVisible.set(false);
       },
@@ -117,8 +107,10 @@ export class UsersListComponent implements OnInit {
     this.confirmSvc.confirm({
       message: `Delete user "${user.userName}"?`,
       accept: () => {
-        this.users.update(list => list.filter(u => u.id !== user.id));
-        this.msgSvc.add({ severity: 'success', summary: 'Deleted', detail: 'User removed.' });
+        this.store.dispatch(new DeleteUser(user.id)).subscribe({
+          next: () => this.msgSvc.add({ severity: 'success', summary: 'Deleted', detail: 'User deleted.' }),
+          error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete user.' })
+        });
       }
     });
   }

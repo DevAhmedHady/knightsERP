@@ -96,6 +96,11 @@ public sealed class UserService(
         return user.Adapt<UserResponse>();
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await userRepository.DeleteAsync(id, cancellationToken);
+    }
+
     private async Task<User> GetRequiredUserAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByIdAsync(id, cancellationToken);

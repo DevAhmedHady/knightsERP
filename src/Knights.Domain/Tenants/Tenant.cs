@@ -73,6 +73,11 @@ public class Tenant : AuditedEntity
         IsActive = isActive;
     }
 
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
+
     public void ConfigureEnvironment(string environmentDisplayName, string themeKey, string worldDescription)
     {
         ValidationRules.IsNotNullOrWhiteSpace(nameof(EnvironmentDisplayName), environmentDisplayName);

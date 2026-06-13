@@ -6,8 +6,16 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TenantService } from '../../../core/services/tenant.service';
-import { FeatureCatalogItemResponse, TenantSelectedFeatureResponse, TenantSetupSummaryResponse } from '../../../core/models/tenant.model';
+import { select, Store } from '@ngxs/store';
+import { FeatureCatalogItemResponse, TenantSelectedFeatureResponse } from '../../../core/models/tenant.model';
+import {
+  ConfigureCurrentTenantEnvironment,
+  LoadCurrentTenantSetup,
+  RemoveCurrentTenantFeature,
+  SelectCurrentTenantFeature,
+  UpdateCurrentTenantFeatureSettings
+} from '../state/tenants.actions';
+import { TenantsState } from '../state/tenants.state';
 
 @Component({
   selector: 'app-tenant-setup',
@@ -17,13 +25,13 @@ import { FeatureCatalogItemResponse, TenantSelectedFeatureResponse, TenantSetupS
   templateUrl: './tenant-setup.component.html'
 })
 export class TenantSetupComponent implements OnInit {
-  private readonly tenantService = inject(TenantService);
+  private readonly store = inject(Store);
   private readonly fb = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
 
-  readonly loading = signal(true);
+  readonly loading = select(TenantsState.loading);
   readonly saving = signal(false);
-  readonly summary = signal<TenantSetupSummaryResponse | null>(null);
+  readonly summary = select(TenantsState.setup);
   readonly selectedFeatureIds = computed(() => new Set(this.summary()?.selectedFeatures.map(feature => feature.id) ?? []));
   readonly featureSettingsForms = signal<Record<string, FormGroup>>({});
   readonly completedSteps = computed(() => this.summary()?.steps.filter(step => step.isCompleted).length ?? 0);
@@ -41,22 +49,9 @@ export class TenantSetupComponent implements OnInit {
   }
 
   reload(): void {
-    this.loading.set(true);
-    this.tenantService.getCurrentSetup().subscribe({
-      next: summary => {
-        this.summary.set(summary);
-        this.featureSettingsForms.set(this.buildFeatureSettingsForms(summary.selectedFeatures));
-        this.form.patchValue({
-          environmentDisplayName: summary.environmentDisplayName,
-          themeKey: summary.themeKey,
-          worldDescription: summary.worldDescription
-        });
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load setup.' });
-      }
+    this.store.dispatch(new LoadCurrentTenantSetup()).subscribe({
+      next: () => this.syncFormsFromSummary(),
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load setup.' })
     });
   }
 
@@ -68,14 +63,13 @@ export class TenantSetupComponent implements OnInit {
 
     this.saving.set(true);
     const raw = this.form.getRawValue();
-    this.tenantService.configureCurrentEnvironment({
+    this.store.dispatch(new ConfigureCurrentTenantEnvironment({
       environmentDisplayName: raw.environmentDisplayName ?? '',
       themeKey: raw.themeKey ?? '',
       worldDescription: raw.worldDescription ?? ''
-    }).subscribe({
-      next: summary => {
-        this.summary.set(summary);
-        this.featureSettingsForms.set(this.buildFeatureSettingsForms(summary.selectedFeatures));
+    })).subscribe({
+      next: () => {
+        this.syncFormsFromSummary();
         this.saving.set(false);
         this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Environment updated.' });
       },
@@ -88,14 +82,13 @@ export class TenantSetupComponent implements OnInit {
 
   toggleFeature(feature: FeatureCatalogItemResponse): void {
     const selected = this.selectedFeatureIds().has(feature.id);
-    const request = selected
-      ? this.tenantService.removeCurrentFeature(feature.id)
-      : this.tenantService.selectCurrentFeature(feature.id);
+    const action = selected
+      ? new RemoveCurrentTenantFeature(feature.id)
+      : new SelectCurrentTenantFeature(feature.id);
 
-    request.subscribe({
-      next: summary => {
-        this.summary.set(summary);
-        this.featureSettingsForms.set(this.buildFeatureSettingsForms(summary.selectedFeatures));
+    this.store.dispatch(action).subscribe({
+      next: () => {
+        this.syncFormsFromSummary();
         this.messageService.add({
           severity: 'success',
           summary: selected ? 'Removed' : 'Added',
@@ -132,10 +125,9 @@ export class TenantSetupComponent implements OnInit {
     }
 
     const payload = JSON.stringify(form.getRawValue());
-    this.tenantService.updateCurrentFeatureSettings(feature.id, payload).subscribe({
-      next: summary => {
-        this.summary.set(summary);
-        this.featureSettingsForms.set(this.buildFeatureSettingsForms(summary.selectedFeatures));
+    this.store.dispatch(new UpdateCurrentTenantFeatureSettings(feature.id, payload)).subscribe({
+      next: () => {
+        this.syncFormsFromSummary();
         this.messageService.add({ severity: 'success', summary: 'Saved', detail: `${feature.name} settings updated.` });
       },
       error: (error) => {
@@ -159,6 +151,20 @@ export class TenantSetupComponent implements OnInit {
       acc[feature.id] = new FormGroup(controls);
       return acc;
     }, {});
+  }
+
+  private syncFormsFromSummary(): void {
+    const summary = this.summary();
+    if (!summary) {
+      return;
+    }
+
+    this.featureSettingsForms.set(this.buildFeatureSettingsForms(summary.selectedFeatures));
+    this.form.patchValue({
+      environmentDisplayName: summary.environmentDisplayName,
+      themeKey: summary.themeKey,
+      worldDescription: summary.worldDescription
+    });
   }
 
   private getFeatureSchemaProperties(feature: TenantSelectedFeatureResponse): Record<string, { type?: string }> {

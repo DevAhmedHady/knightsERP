@@ -60,6 +60,19 @@ public class TenantServiceTests
     }
 
     [Fact]
+    public async Task DeactivateAsync_MarksTenantInactive()
+    {
+        var (service, tenantRepo, _) = CreateService();
+        var tenant = await service.CreateAsync(MakeCreateRequest());
+
+        await service.DeactivateAsync(tenant.Id);
+
+        var stored = await tenantRepo.GetByIdAsync(tenant.Id);
+        Assert.NotNull(stored);
+        Assert.False(stored!.IsActive);
+    }
+
+    [Fact]
     public async Task AssignRoleAsync_AssignsRoleToTenant()
     {
         var (service, tenantRepo, _) = CreateService();

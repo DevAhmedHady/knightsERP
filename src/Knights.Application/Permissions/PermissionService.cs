@@ -35,10 +35,7 @@ public sealed class PermissionService(IPermissionRepository permissionRepository
 
     public async Task<PermissionResponse> UpdateAsync(Guid id, UpdatePermissionRequest request, CancellationToken cancellationToken = default)
     {
-        var permission = await permissionRepository.GetByIdAsync(id, cancellationToken);
-        if (permission is null)
-            throw new InvalidOperationException($"Permission '{id}' was not found.");
-
+        var permission = await GetRequiredPermissionAsync(id, cancellationToken);
         permission.Update(request.DisplayName, request.Description);
         await permissionRepository.UpdateAsync(permission, cancellationToken);
         return permission.Adapt<PermissionResponse>();
@@ -47,5 +44,11 @@ public sealed class PermissionService(IPermissionRepository permissionRepository
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await permissionRepository.DeleteAsync(id, cancellationToken);
+    }
+
+    private async Task<Permission> GetRequiredPermissionAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var permission = await permissionRepository.GetByIdAsync(id, cancellationToken);
+        return permission ?? throw new InvalidOperationException($"Permission '{id}' was not found.");
     }
 }

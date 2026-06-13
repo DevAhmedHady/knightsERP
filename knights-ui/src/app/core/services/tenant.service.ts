@@ -38,6 +38,10 @@ export class TenantService {
     return this.http.put<void>(`${this.base}/${id}`, req);
   }
 
+  deactivate(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${id}/deactivate`, {});
+  }
+
   assignRole(tenantId: string, roleId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${tenantId}/roles/${roleId}`, {});
   }

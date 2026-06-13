@@ -4,10 +4,6 @@ using Knights.Domain.Common;
 
 namespace Knights.Infrastructure.Persistence.Interceptors;
 
-/// <summary>
-/// Stamps audit metadata on <see cref="AuditedEntity"/> instances as they are persisted.
-/// A real current-user accessor is not wired yet, so changes are attributed to "system".
-/// </summary>
 public sealed class AuditableEntityInterceptor : SaveChangesInterceptor
 {
     private const string SystemUser = "system";

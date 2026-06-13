@@ -8,8 +8,10 @@ import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { PermissionService } from '../../../core/services/permission.service';
+import { select, Store } from '@ngxs/store';
 import { PermissionResponse } from '../../../core/models/permission.model';
+import { CreatePermission, DeletePermission, LoadPermissions, UpdatePermission } from '../state/permissions.actions';
+import { PermissionsState } from '../state/permissions.state';
 
 @Component({
   selector: 'app-permissions-list',
@@ -22,13 +24,13 @@ import { PermissionResponse } from '../../../core/models/permission.model';
   templateUrl: './permissions-list.component.html'
 })
 export class PermissionsListComponent implements OnInit {
-  private readonly permissionService = inject(PermissionService);
+  private readonly store = inject(Store);
   private readonly fb = inject(FormBuilder);
   private readonly confirmSvc = inject(ConfirmationService);
   private readonly msgSvc = inject(MessageService);
 
-  permissions = signal<PermissionResponse[]>([]);
-  loading = signal(true);
+  permissions = select(PermissionsState.items);
+  loading = select(PermissionsState.loading);
   dialogVisible = signal(false);
   editingId = signal<string | null>(null);
 
@@ -39,10 +41,7 @@ export class PermissionsListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.permissionService.getAll().subscribe({
-      next: perms => { this.permissions.set(perms); this.loading.set(false); },
-      error: () => this.loading.set(false)
-    });
+    this.store.dispatch(new LoadPermissions());
   }
 
   openCreate(): void {
@@ -64,24 +63,19 @@ export class PermissionsListComponent implements OnInit {
     const val = this.form.getRawValue();
     const id = this.editingId();
 
-    const obs = id
-      ? this.permissionService.update(id, {
+    const action = id
+      ? new UpdatePermission(id, {
           displayName: val.displayName!,
           description: val.description ?? undefined
         })
-      : this.permissionService.create({
+      : new CreatePermission({
           codeName: val.codeName!,
           displayName: val.displayName!,
           description: val.description ?? undefined
         });
 
-    obs.subscribe({
-      next: (saved) => {
-        if (id) {
-          this.permissions.update(list => list.map(p => p.id === id ? saved : p));
-        } else {
-          this.permissions.update(list => [saved, ...list]);
-        }
+    this.store.dispatch(action).subscribe({
+      next: () => {
         this.msgSvc.add({ severity: 'success', summary: id ? 'Updated' : 'Created', detail: 'Permission saved.' });
         this.form.get('codeName')?.enable();
         this.dialogVisible.set(false);
@@ -94,9 +88,8 @@ export class PermissionsListComponent implements OnInit {
     this.confirmSvc.confirm({
       message: `Delete permission "${perm.displayName}"?`,
       accept: () => {
-        this.permissionService.delete(perm.id).subscribe({
+        this.store.dispatch(new DeletePermission(perm.id)).subscribe({
           next: () => {
-            this.permissions.update(list => list.filter(p => p.id !== perm.id));
             this.msgSvc.add({ severity: 'success', summary: 'Deleted', detail: 'Permission removed.' });
           },
           error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Delete failed.' })

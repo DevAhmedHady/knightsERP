@@ -8,10 +8,20 @@ import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { RoleService } from '../../../core/services/role.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { RoleResponse, RoleWithPermissionsResponse } from '../../../core/models/role.model';
-import { PermissionResponse } from '../../../core/models/permission.model';
+import { select, Store } from '@ngxs/store';
+import { RoleResponse } from '../../../core/models/role.model';
+import { LoadPermissions } from '../../permissions/state/permissions.actions';
+import { PermissionsState } from '../../permissions/state/permissions.state';
+import {
+  AssignRolePermission,
+  CreateRole,
+  DeleteRole,
+  LoadRole,
+  LoadRoles,
+  RemoveRolePermission,
+  UpdateRole
+} from '../state/roles.actions';
+import { RolesState } from '../state/roles.state';
 
 @Component({
   selector: 'app-roles-list',
@@ -24,20 +34,19 @@ import { PermissionResponse } from '../../../core/models/permission.model';
   templateUrl: './roles-list.component.html'
 })
 export class RolesListComponent implements OnInit {
-  private roleService = inject(RoleService);
-  private permissionService = inject(PermissionService);
+  private store = inject(Store);
   private fb = inject(FormBuilder);
   private confirmSvc = inject(ConfirmationService);
   private msgSvc = inject(MessageService);
 
-  roles = signal<RoleResponse[]>([]);
-  allPermissions = signal<PermissionResponse[]>([]);
-  loading = signal(true);
+  roles = select(RolesState.items);
+  allPermissions = select(PermissionsState.items);
+  loading = select(RolesState.loading);
   dialogVisible = signal(false);
   permDialogVisible = signal(false);
   editingId = signal<string | null>(null);
-  selectedRole = signal<RoleWithPermissionsResponse | null>(null);
-  selectedPermIds = signal<Set<string>>(new Set());
+  selectedRole = select(RolesState.selected);
+  selectedPermIds = computed(() => new Set(this.selectedRole()?.permissions?.map(permission => permission.id) ?? []));
   activeRoles = computed(() => this.roles().filter(r => r.isActive).length);
   staticRoles = computed(() => this.roles().filter(r => r.isStatic).length);
 
@@ -50,11 +59,7 @@ export class RolesListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.roleService.getAll().subscribe({
-      next: roles => { this.roles.set(roles); this.loading.set(false); },
-      error: () => this.loading.set(false)
-    });
-    this.permissionService.getAll().subscribe(perms => this.allPermissions.set(perms));
+    this.store.dispatch([new LoadRoles(), new LoadPermissions()]);
   }
 
   openCreate(): void {
@@ -74,9 +79,9 @@ export class RolesListComponent implements OnInit {
     const val = this.form.getRawValue();
     const id = this.editingId();
 
-    const obs = id
-      ? this.roleService.update(id, { name: val.name!, description: val.description ?? undefined })
-      : this.roleService.create({
+    const action = id
+      ? new UpdateRole(id, { name: val.name!, description: val.description ?? undefined })
+      : new CreateRole({
           name: val.name!,
           description: val.description ?? undefined,
           isStatic: val.isStatic ?? false,
@@ -84,13 +89,8 @@ export class RolesListComponent implements OnInit {
           isActive: val.isActive ?? true
         });
 
-    obs.subscribe({
-      next: (saved) => {
-        if (id) {
-          this.roles.update(list => list.map(r => r.id === id ? saved : r));
-        } else {
-          this.roles.update(list => [saved, ...list]);
-        }
+    this.store.dispatch(action).subscribe({
+      next: () => {
         this.msgSvc.add({ severity: 'success', summary: id ? 'Updated' : 'Created', detail: 'Role saved.' });
         this.dialogVisible.set(false);
       },
@@ -102,9 +102,8 @@ export class RolesListComponent implements OnInit {
     this.confirmSvc.confirm({
       message: `Delete role "${role.name}"?`,
       accept: () => {
-        this.roleService.delete(role.id).subscribe({
+        this.store.dispatch(new DeleteRole(role.id)).subscribe({
           next: () => {
-            this.roles.update(list => list.filter(r => r.id !== role.id));
             this.msgSvc.add({ severity: 'success', summary: 'Deleted', detail: 'Role removed.' });
           },
           error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Delete failed.' })
@@ -114,24 +113,20 @@ export class RolesListComponent implements OnInit {
   }
 
   openPermissions(role: RoleResponse): void {
-    this.roleService.getById(role.id).subscribe(r => {
-      const withPerms = r as unknown as RoleWithPermissionsResponse;
-      this.selectedRole.set(withPerms);
-      this.selectedPermIds.set(new Set((withPerms.permissions ?? []).map(p => p.id)));
-      this.permDialogVisible.set(true);
+    this.store.dispatch(new LoadRole(role.id)).subscribe({
+      next: () => this.permDialogVisible.set(true),
+      error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load role.' })
     });
   }
 
   togglePermission(permId: string, roleId: string): void {
     const current = this.selectedPermIds();
     if (current.has(permId)) {
-      this.roleService.removePermission(roleId, permId).subscribe({
-        next: () => this.selectedPermIds.update(s => { const ns = new Set(s); ns.delete(permId); return ns; }),
+      this.store.dispatch(new RemoveRolePermission(roleId, permId)).subscribe({
         error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove permission.' })
       });
     } else {
-      this.roleService.assignPermission(roleId, permId).subscribe({
-        next: () => this.selectedPermIds.update(s => new Set([...s, permId])),
+      this.store.dispatch(new AssignRolePermission(roleId, permId)).subscribe({
         error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to assign permission.' })
       });
     }

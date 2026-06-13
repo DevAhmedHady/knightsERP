@@ -1,6 +1,6 @@
 <p-toast></p-toast>
 
-@if (!isSystemAdmin) {
+@if (!isSystemAdmin()) {
   <div class="p-6 text-sm text-surface-500">Feature catalog is managed by system admin only.</div>
 } @else {
   <div class="space-y-4 p-4 lg:p-6">

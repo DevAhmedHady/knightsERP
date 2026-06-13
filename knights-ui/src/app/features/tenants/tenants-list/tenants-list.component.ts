@@ -11,12 +11,24 @@ import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TenantService } from '../../../core/services/tenant.service';
+import { select, Store } from '@ngxs/store';
 import { TenantResponse } from '../../../core/models/tenant.model';
-import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../core/models/user.model';
-import { RoleService } from '../../../core/services/role.service';
-import { RoleResponse } from '../../../core/models/role.model';
+import { LoadRoles } from '../../roles/state/roles.actions';
+import { RolesState } from '../../roles/state/roles.state';
+import { LoadUsers } from '../../users/state/users.actions';
+import { UsersState } from '../../users/state/users.state';
+import {
+  AddTenantMember,
+  AssignTenantRole,
+  CreateTenant,
+  DeactivateTenant,
+  LoadTenant,
+  LoadTenants,
+  RemoveTenantRole,
+  UpdateTenant
+} from '../state/tenants.actions';
+import { TenantsState } from '../state/tenants.state';
 
 interface UserSelectOption {
   label: string;
@@ -37,22 +49,20 @@ interface UserSelectOption {
   templateUrl: './tenants-list.component.html'
 })
 export class TenantsListComponent implements OnInit {
-  private tenantService = inject(TenantService);
-  private userService = inject(UserService);
-  private roleService = inject(RoleService);
+  private store = inject(Store);
   private fb = inject(FormBuilder);
   private confirmSvc = inject(ConfirmationService);
   private msgSvc = inject(MessageService);
 
-  tenants = signal<TenantResponse[]>([]);
-  loading = signal(true);
+  tenants = select(TenantsState.items);
+  loading = select(TenantsState.loading);
   dialogVisible = signal(false);
   editingId = signal<string | null>(null);
-  selectedTenant = signal<TenantResponse | null>(null);
+  selectedTenant = select(TenantsState.selected);
   manageDialogVisible = signal(false);
   roleIdInput = signal('');
-  users = signal<UserResponse[]>([]);
-  allRoles = signal<RoleResponse[]>([]);
+  users = select(UsersState.items);
+  allRoles = select(RolesState.items);
   roleOptions = computed(() => this.allRoles().map(r => ({ label: r.name, value: r.id })));
   availableRoleOptions = computed(() => {
     const assigned = new Set(this.selectedTenant()?.roleIds ?? []);
@@ -82,9 +92,9 @@ export class TenantsListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadTenants();
-    this.loadUsers();
-    this.roleService.getAll().subscribe({ next: roles => this.allRoles.set(roles) });
+    this.store.dispatch([new LoadTenants(), new LoadUsers(), new LoadRoles()]).subscribe({
+      error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tenant data.' })
+    });
   }
 
   openCreate(): void {
@@ -109,9 +119,8 @@ export class TenantsListComponent implements OnInit {
   }
 
   openManage(tenant: TenantResponse): void {
-    this.tenantService.getById(tenant.id).subscribe({
-      next: t => {
-        this.selectedTenant.set(t);
+    this.store.dispatch(new LoadTenant(tenant.id)).subscribe({
+      next: () => {
         this.roleIdInput.set('');
         this.memberForm.reset();
         this.manageDialogVisible.set(true);
@@ -126,32 +135,28 @@ export class TenantsListComponent implements OnInit {
     const id = this.editingId();
 
     if (id) {
-      this.tenantService.update(id, {
+      this.store.dispatch(new UpdateTenant(id, {
         name: val.name!,
         description: val.description ?? '',
         expiryDate: val.expiryDate || undefined,
         sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
-      }).subscribe({
+      })).subscribe({
         next: () => {
-          this.tenants.update(list => list.map(t => t.id === id
-            ? { ...t, name: val.name!, description: val.description ?? '' }
-            : t));
           this.msgSvc.add({ severity: 'success', summary: 'Updated', detail: 'Tenant saved.' });
           this.dialogVisible.set(false);
         },
         error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Operation failed.' })
       });
     } else {
-      this.tenantService.create({
+      this.store.dispatch(new CreateTenant({
         codeName: val.codeName!,
         name: val.name!,
         description: val.description ?? '',
         ownerId: val.ownerId!,
         expiryDate: val.expiryDate || undefined,
         sessionTimeoutMinutes: val.sessionTimeoutMinutes ?? undefined
-      }).subscribe({
-        next: result => {
-          this.tenants.update(list => [result, ...list]);
+      })).subscribe({
+        next: () => {
           this.msgSvc.add({ severity: 'success', summary: 'Created', detail: 'Tenant created.' });
           this.dialogVisible.set(false);
         },
@@ -164,9 +169,8 @@ export class TenantsListComponent implements OnInit {
     const t = this.selectedTenant();
     const roleId = this.roleIdInput().trim();
     if (!t || !roleId) return;
-    this.tenantService.assignRole(t.id, roleId).subscribe({
+    this.store.dispatch(new AssignTenantRole(t.id, roleId)).subscribe({
       next: () => {
-        this.selectedTenant.update(prev => prev ? { ...prev, roleIds: [...prev.roleIds, roleId] } : prev);
         this.roleIdInput.set('');
         this.msgSvc.add({ severity: 'success', summary: 'Role assigned' });
       },
@@ -177,10 +181,7 @@ export class TenantsListComponent implements OnInit {
   removeRole(roleId: string): void {
     const t = this.selectedTenant();
     if (!t) return;
-    this.tenantService.removeRole(t.id, roleId).subscribe({
-      next: () => this.selectedTenant.update(prev => prev
-        ? { ...prev, roleIds: prev.roleIds.filter(r => r !== roleId) }
-        : prev),
+    this.store.dispatch(new RemoveTenantRole(t.id, roleId)).subscribe({
       error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove role.' })
     });
   }
@@ -189,9 +190,9 @@ export class TenantsListComponent implements OnInit {
     const t = this.selectedTenant();
     const userId = this.memberForm.controls.userId.value?.trim();
     if (!t || !userId) return;
-    this.tenantService.addMember(t.id, userId).subscribe({
+    this.store.dispatch(new AddTenantMember(t.id, userId)).subscribe({
       next: () => {
-        this.users.update(users => users.map(user => user.id === userId ? { ...user, tenantId: t.id } : user));
+        this.store.dispatch(new LoadUsers());
         this.memberForm.reset();
         this.msgSvc.add({ severity: 'success', summary: 'Member added' });
       },
@@ -203,8 +204,10 @@ export class TenantsListComponent implements OnInit {
     this.confirmSvc.confirm({
       message: `Deactivate tenant "${tenant.name}"?`,
       accept: () => {
-        this.tenants.update(list => list.map(t => t.id === tenant.id ? { ...t, isActive: false } : t));
-        this.msgSvc.add({ severity: 'success', summary: 'Deactivated' });
+        this.store.dispatch(new DeactivateTenant(tenant.id)).subscribe({
+          next: () => this.msgSvc.add({ severity: 'success', summary: 'Deactivated', detail: 'Tenant deactivated.' }),
+          error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to deactivate tenant.' })
+        });
       }
     });
   }
@@ -226,24 +229,4 @@ export class TenantsListComponent implements OnInit {
     };
   }
 
-  private loadUsers(): void {
-    this.userService.getAll().subscribe({
-      next: users => this.users.set(users),
-      error: () => this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' })
-    });
-  }
-
-  private loadTenants(): void {
-    this.loading.set(true);
-    this.tenantService.getAll().subscribe({
-      next: tenants => {
-        this.tenants.set(tenants);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.msgSvc.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tenants.' });
-      }
-    });
-  }
 }

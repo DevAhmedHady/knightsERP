@@ -7,9 +7,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
-import { AuthService } from '../../../core/services/auth.service';
-import { TenantService } from '../../../core/services/tenant.service';
+import { select, Store } from '@ngxs/store';
 import { FeatureCatalogItemResponse } from '../../../core/models/tenant.model';
+import { AuthState } from '../../auth/state/auth.state';
+import { CreateFeatureCatalogItem, LoadFeatureCatalog, UpdateFeatureCatalogItem } from '../state/tenants.actions';
+import { TenantsState } from '../state/tenants.state';
 
 @Component({
   selector: 'app-feature-catalog',
@@ -19,13 +21,13 @@ import { FeatureCatalogItemResponse } from '../../../core/models/tenant.model';
   templateUrl: './feature-catalog.component.html'
 })
 export class FeatureCatalogComponent implements OnInit {
-  private readonly authService = inject(AuthService);
-  private readonly tenantService = inject(TenantService);
+  private readonly store = inject(Store);
   private readonly fb = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
 
-  readonly items = signal<FeatureCatalogItemResponse[]>([]);
-  readonly loading = signal(true);
+  readonly items = select(TenantsState.featureCatalog);
+  readonly loading = select(TenantsState.loading);
+  readonly isSystemAdmin = select(AuthState.isSystemAdmin);
   readonly dialogVisible = signal(false);
   readonly editing = signal<FeatureCatalogItemResponse | null>(null);
 
@@ -46,25 +48,13 @@ export class FeatureCatalogComponent implements OnInit {
     isRetired: [false]
   });
 
-  get isSystemAdmin(): boolean {
-    return this.authService.isSystemAdmin;
-  }
-
   ngOnInit(): void {
     this.reload();
   }
 
   reload(): void {
-    this.loading.set(true);
-    this.tenantService.getFeatureCatalog().subscribe({
-      next: items => {
-        this.items.set(items);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load catalog.' });
-      }
+    this.store.dispatch(new LoadFeatureCatalog()).subscribe({
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load catalog.' })
     });
   }
 
@@ -128,8 +118,8 @@ export class FeatureCatalogComponent implements OnInit {
       .map(value => value.trim())
       .filter(Boolean);
 
-    const request = this.editing()
-      ? this.tenantService.updateFeatureCatalogItem(this.editing()!.id, {
+    const action = this.editing()
+      ? new UpdateFeatureCatalogItem(this.editing()!.id, {
           name: raw.name!,
           description: raw.description!,
           category: raw.category!,
@@ -144,7 +134,7 @@ export class FeatureCatalogComponent implements OnInit {
           isPublished: !!raw.isPublished,
           isRetired: !!raw.isRetired
         })
-      : this.tenantService.createFeatureCatalogItem({
+      : new CreateFeatureCatalogItem({
           key: raw.key!,
           name: raw.name!,
           description: raw.description!,
@@ -160,10 +150,9 @@ export class FeatureCatalogComponent implements OnInit {
           isPublished: !!raw.isPublished
         });
 
-    request.subscribe({
+    this.store.dispatch(action).subscribe({
       next: () => {
         this.dialogVisible.set(false);
-        this.reload();
         this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Catalog updated.' });
       },
       error: (error) => {

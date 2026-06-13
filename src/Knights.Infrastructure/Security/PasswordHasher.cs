@@ -3,9 +3,6 @@ using Knights.Application.Common.Interfaces;
 
 namespace Knights.Infrastructure.Security;
 
-/// <summary>
-/// PBKDF2 (SHA-256) password hasher. Stored format: {iterations}.{salt-b64}.{hash-b64}.
-/// </summary>
 public sealed class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 16;

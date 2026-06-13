@@ -30,7 +30,7 @@ public sealed class KnightsDbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasQueryFilter(
-            u => _tenantContext.TenantId == null || u.TenantId == _tenantContext.TenantId);
+            u => !u.IsDeleted && (_tenantContext.TenantId == null || u.TenantId == _tenantContext.TenantId));
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KnightsDbContext).Assembly);
         modelBuilder.ApplyDateTimeUtcOffsetConversions(_dateTimeOptions.LoadOffset);

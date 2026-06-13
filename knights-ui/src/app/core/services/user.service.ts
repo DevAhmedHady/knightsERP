@@ -25,6 +25,10 @@ export class UserService {
     return this.http.put<UserResponse>(`${this.base}/api/users/${id}`, req);
   }
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/users/${id}`);
+  }
+
   assignRole(userId: string, roleId: string): Observable<UserResponse> {
     return this.http.post<UserResponse>(`${this.base}/api/users/${userId}/roles/${roleId}`, {});
   }
